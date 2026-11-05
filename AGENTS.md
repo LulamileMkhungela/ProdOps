@@ -37,21 +37,10 @@ commands above, five standards commands, and five workflow commands
 `/improve-skills`) that carry a shaped idea through spec, tasks, implementation
 and verification. Skills live in `.agents/skills/`.
 
-## The canon, read in the workspace
+## Standards commands
 
-Two pages are the school's own material rather than artefacts of a product, and
-both open before a product exists:
-
-- **Library** (`/library`) — 6 series (133 videos), 4 courses, 16 workshops and
-  21 articles, searchable and tagged. Data: `src/data/builderMethods.ts`.
-- **Build kits** (`/kits`) — the six pre-shaped products. *Start this kit* writes
-  the kit's description into the Product stage (`setBrief`) and compiles its
-  archetype, so a kit is compiled here, never cloned.
-
-The catalogue is scraped, dated and counted: `npm run test` asserts every total
-the pages print, and `/coverage` recomputes them in the browser.
 Standards set-up (`/discover-standards`, `/index-standards`, `/inject-standards`,
-`/plan-product`, `/shape-spec`) is in the same folder.
+`/plan-product`, `/shape-spec`) is in `.agents/commands/prodops/` alongside the stage commands.
 
 ## Legacy five-stage rules (not the current studio)
 
@@ -67,7 +56,7 @@ Standards set-up (`/discover-standards`, `/index-standards`, `/inject-standards`
 
 ```bash
 npm run dev           # the workspace on :5173
-npm run preview:site  # the site capture on :5173
-npm run check         # rendering, site, unit, export, walkthrough, smoke, build
+npm run preview       # the built workspace on :4173
+npm run check         # rendering, unit, export, walkthrough, smoke, build
 npm run kit           # rewrite the toolkit files above
 ```

@@ -1,5 +1,6 @@
 /** Optional import controls for a single public GitHub text file. */
 import { useState, type Dispatch, type SetStateAction } from 'react'
+import { apiFetch } from './api'
 import type { Role, StudioProject } from './model'
 
 export function GithubReference({ project, setProject, role, step }: { project: StudioProject; setProject: Dispatch<SetStateAction<StudioProject>>; role: Role; step: string }) {
@@ -8,7 +9,7 @@ export function GithubReference({ project, setProject, role, step }: { project: 
     if (project.references.length >= 12) { setStatus('The project already has twelve references. Remove one first.'); return }
     setBusy(true); setStatus('')
     try {
-      const response = await fetch('/api/github-reference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repo, ref: branch, path }) })
+      const response = await apiFetch('/api/github-reference', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repo, ref: branch, path }) })
       const result = await response.json() as { name?: string; content?: string; source?: string; error?: string }
       if (!response.ok || typeof result.name !== 'string' || typeof result.content !== 'string' || typeof result.source !== 'string') throw new Error(result.error || 'Could not import this file.')
       const bytes = new TextEncoder().encode(result.content); let binary = ''; for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192)); const data = btoa(binary)

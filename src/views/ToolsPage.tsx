@@ -42,18 +42,6 @@ export function ToolPanel({ tool }: { tool: Tool }) {
           <h2>{tool.name}</h2>
           <p className="lz-listing-blurb">{tool.blurb}</p>
         </div>
-        {tool.page && (
-          <a
-            className="lz-listing-arrow"
-            href={tool.page}
-            target="_blank"
-            rel="noreferrer"
-            title={`${tool.name} on the site`}
-          >
-            <Icon name="ArrowRight" size={16} />
-            <span>Explore</span>
-          </a>
-        )}
       </div>
 
       <ol className="lz-toolsteps">
@@ -113,9 +101,6 @@ export function ToolPanel({ tool }: { tool: Tool }) {
             <Link to="wiki" className="lz-btn small">
               <Icon name="BookOpen" size={13} /> The canon, explained
             </Link>
-            <a className="lz-btn small" href="/agentcanon.html" target="_blank" rel="noreferrer">
-              <Icon name="ExternalLink" size={13} /> The canon page
-            </a>
           </div>
         </div>
       )}

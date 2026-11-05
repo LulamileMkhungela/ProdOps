@@ -1,10 +1,11 @@
 /** Optional Figma frame import controls for the current process step. */
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react'
+import { apiFetch } from './api'
 import { addFigmaReference, fetchFigmaReference } from './figma'
 import type { Role, StudioProject } from './model'
 export function FigmaReference({ project, setProject, role, step, token, onVerified }: { project: StudioProject; setProject: Dispatch<SetStateAction<StudioProject>>; role: Role; step: string; token?:string; onVerified:(token:string)=>void }) {
   const [url, setUrl] = useState(''); const [configured, setConfigured] = useState<boolean | null>(null); const [busy, setBusy] = useState(false); const [status, setStatus] = useState('')
-  useEffect(() => { fetch('/api/figma-reference').then(r=>r.json()).then(data=>setConfigured(data.configured === true)).catch(()=>setConfigured(false)) }, [])
+  useEffect(() => { apiFetch('/api/figma-reference').then(r=>r.json()).then(data=>setConfigured(data.configured === true)).catch(()=>setConfigured(false)) }, [])
   async function read() {
     setBusy(true); setStatus('')
     try { const item = await fetchFigmaReference(url, role, step, token); if (token) onVerified(token); addFigmaReference(project, item); setProject(p => { try { return addFigmaReference(p, item) } catch { return p } }); setStatus(item.text.includes('[Some frame details were truncated') ? 'Frame imported, but some details were truncated. Choose a smaller frame if needed.' : 'Frame imported. The AI can use its layout and styles. Import again to refresh.') }

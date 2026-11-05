@@ -55,7 +55,5 @@ a compiler having seen the file.
 
 - **The starter is a template, not a running Rails app.** The package carries its agent setup,
   conventions and README, not the application.
-- **The reference site copy is a copy.** It is served offline, with the pages that came back as
-  a bot challenge replaced by an honest notice. It is not presented as the workspace.
 - **Screenshots are SVG.** They are drawn deterministically from the compiled screen blocks and
   tokens, so they cannot go stale and need no headless browser.

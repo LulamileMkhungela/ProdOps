@@ -32,9 +32,7 @@ npm run check # proves the pages, the package, the walkthrough and the build
 ```
 
 The eight tools' installation sections copy from `.agents/skills/` and
-`template/starter/`. Those paths exist because `npm run kit` writes them, and
-`npm run site-check` fails if any page promises a path this repository does not
-have.
+`template/starter/`. Those paths exist because `npm run kit` writes them.
 
 ## The five stages and the ten commands
 

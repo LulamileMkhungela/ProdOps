@@ -2,17 +2,22 @@
 
 Product owner: Lulamile Mkhungela.
 
-ProdOps has two distinct parts: the captured public site at `/` and a new role-based product workspace at `/workspace/`. The old workspace is no longer the application entry point. Its source is retained for existing projects and reference; this new workspace uses a separate browser storage key and does not migrate old projects automatically.
+ProdOps is a role-based product workspace: business, product/UX/UI/CX design, development, quality assurance and delivery/operations. Its source for the earlier five-stage workspace is retained for existing projects and reference; this workspace uses a separate browser storage key and does not migrate old projects automatically.
 
-## Run the site and workspace
+## Live preview
+
+The workspace is published as a static site at <https://lulamilemkhungela.github.io/ProdOps/>. It is built and deployed by `.github/workflows/pages.yml` on every push to `main`. The hosted preview has no server, so AI drafting and Figma/GitHub imports are not available there; editing, the Orbit dashboard example, approvals and exports all work, and everything is stored in your own browser.
+
+## Run it locally
 
 ```sh
 npm ci
-npm run build
-npm run preview:site
+npm run dev       # development server on :5173
+# or
+npm run build && npm run preview
 ```
 
-The site server binds to `0.0.0.0:5173` by default; set `PORT` to change it. `npm run dev` runs the workspace in Vite for development. The public site is a local capture, not a live mirror: some captured pages were blocked by Cloudflare and are displayed as notices. It cannot be guaranteed identical to the current Builder Methods site or provide its online services.
+AI drafting and the reference imports need the local server (`npm run dev` or `npm run preview`) and a provider, as described below.
 
 ## Workspace workflow
 
@@ -60,7 +65,7 @@ export PRODOPS_AI_URL="https://api.openai.com/v1/chat/completions"
 export PRODOPS_AI_MODEL="your-model-name"
 export PRODOPS_AI_API_KEY="your-provider-key"
 export PRODOPS_AI_TRUSTED_LOCAL="1"
-npm run build && npm run preview:site
+npm run build && npm run preview
 ```
 
 For Anthropic, set `PRODOPS_AI_PROVIDER=anthropic`, `PRODOPS_AI_URL=https://api.anthropic.com/v1/messages` and the appropriate model and API key. Local OpenAI-compatible model servers may use HTTP on `localhost`, `127.0.0.1` or `[::1]`, without an API key. For this server-wide option, the provider key remains on the server; no access-password prompt is shown in the workspace. Requests go through same-origin `/api/studio`; the provider receives the brief, all project Markdown, editable design and solution files, all skill Markdown, imported text references, role-specific context, previous answers and current-step images. Some models may not support the prompt size, images or structured output.

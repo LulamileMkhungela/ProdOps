@@ -238,7 +238,7 @@ Standards set-up (\`/discover-standards\`, \`/index-standards\`, \`/inject-stand
 
 \`\`\`bash
 npm run dev           # the workspace on :5173
-npm run preview:site  # the site capture on :5173
+npm run preview       # the built workspace
 npm run check         # rendering, site, unit, export, walkthrough, smoke, build
 npm run kit           # rewrite the toolkit files above
 \`\`\`

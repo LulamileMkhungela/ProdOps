@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown, Link2, LockKeyhole } from 'lucide-react'
 import { fetchFigmaReference } from './figma'
+import { apiFetch } from './api'
 
 export interface ClaudeConnection { key:string; model:string }
 export interface FigmaConnection { token:string; verified:boolean }
@@ -23,14 +24,14 @@ export function Connections({claude,setClaude,figma,setFigma,serverConfigured,se
   const [claudeKey,setClaudeKey]=useState(''); const [model,setModel]=useState('claude-sonnet-4-6'); const [figmaKey,setFigmaKey]=useState(''); const [frame,setFrame]=useState('')
   const [claudeMessage,setClaudeMessage]=useState(''); const [figmaMessage,setFigmaMessage]=useState(''); const [testingClaude,setTestingClaude]=useState(false); const [testingFigma,setTestingFigma]=useState(false)
   const [figmaServer,setFigmaServer]=useState<boolean | null>(null)
-  useEffect(()=>{ fetch('/api/figma-reference').then(r=>r.json()).then(data=>setFigmaServer(data.configured===true)).catch(()=>setFigmaServer(false)) },[])
+  useEffect(()=>{ apiFetch('/api/figma-reference').then(r=>r.json()).then(data=>setFigmaServer(data.configured===true)).catch(()=>setFigmaServer(false)) },[])
   async function connectClaude() {
     const key=claudeKey.trim(), selectedModel=model.trim()
     if (!secureContext()) { setClaudeMessage('Use HTTPS or local development to enter a key.'); return }
     if (!isKey(key) || !isModel(selectedModel)) { setClaudeMessage('Enter a valid API key and model ID without spaces.'); return }
     setTestingClaude(true);setClaudeMessage('Checking Claude…')
     try {
-      const response=await fetch('/api/studio',{method:'POST',headers:{'Content-Type':'application/json','X-ProdOps-Claude-Key':key,'X-ProdOps-Claude-Model':selectedModel},body:JSON.stringify({testConnection:true})})
+      const response=await apiFetch('/api/studio',{method:'POST',headers:{'Content-Type':'application/json','X-ProdOps-Claude-Key':key,'X-ProdOps-Claude-Model':selectedModel},body:JSON.stringify({testConnection:true})})
       const result=await response.json() as {connected?:boolean;error?:string}
       if (!response.ok || result.connected!==true) throw new Error(result.error || 'Claude could not be verified.')
       setClaude({key,model:selectedModel});setClaudeKey('');setClaudeMessage('Claude connected for this tab. You can now create drafts.')

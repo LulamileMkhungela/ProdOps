@@ -369,36 +369,6 @@ if (compModal) {
 }
 
 
-// ---- the canon: library and build kits ------------------------------------
-// Both pages open before a product is described, so they are reached here with
-// the seeded product still in place — the point is that they render, and that a
-// kit actually compiles rather than only linking upstream.
-w.location.hash = '#/library'
-await wait(110)
-const libraryHtml = w.document.getElementById('root')?.innerHTML ?? ''
-const libraryOk =
-  libraryHtml.length > 4000 &&
-  libraryHtml.includes('The library') &&
-  libraryHtml.includes('Become the Builder') &&
-  libraryHtml.includes('Gemini') === false
-if (!libraryOk) failed++
-console.log(`${libraryOk ? 'ok ' : 'ERR'} library lists the series and the catalogue`)
-
-// the tab strip switches shelves: Courses is a different list from Videos
-const courseTab = Array.from(w.document.querySelectorAll('button[role=tab]')).find((b) => b.textContent?.includes('Courses'))
-click(courseTab ?? null)
-await wait(80)
-const coursesShown = (w.document.getElementById('root')?.innerHTML ?? '').includes('Multi-Agent OpenClaw')
-console.log(`${coursesShown ? 'ok ' : 'ERR'} library tabs switch to the courses`)
-if (!coursesShown) failed++
-
-w.location.hash = '#/kits'
-await wait(110)
-const kitsHtml = w.document.getElementById('root')?.innerHTML ?? ''
-const kitsListed = kitsHtml.includes('Simple CRM Build Kit') && kitsHtml.includes('Content Pipeline App Build Kit')
-if (!kitsListed) failed++
-console.log(`${kitsListed ? 'ok ' : 'ERR'} the six build kits are listed`)
-
 const startKit = Array.from(w.document.querySelectorAll('button')).find((b) => b.textContent?.includes('Start this kit'))
 click(startKit ?? null)
 await wait(220)

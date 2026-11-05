@@ -519,9 +519,9 @@ export function Studio() {
           {openTabs.map(path => { const base = path.split('/').pop() ?? path; const name = path === 'business/original-spec.md' ? 'Your brief' : openTabs.filter(p => p.split('/').pop() === base).length > 1 ? path.split('/').slice(-2).join('/') : fileName(project, path); return <div key={path} className={`ide-tab${selected === path ? ' active' : ''}`}><button role="tab" aria-selected={selected === path} title={path} onClick={() => openDeliverable(path)}>{fileIcon(path)}<span>{name}</span></button><button className="ide-tab-close" aria-label={`Close ${name}`} onClick={() => closeTab(path)}><X size={12}/></button></div> })}
           <div className="ide-tabs-fill"/>
           <div className="ide-tabs-tools">
-            {(role === 'development' || role === 'design') && (previewAvailable || canRun) && <button className="button outline small" onClick={() => setSplit('__preview__')} title="Show the code and the running output together">Code &amp; output</button>}
-            {(role === 'design' || role === 'development') && previewAvailable && <button className="button outline small" onClick={() => setShowStaticPreview(true)} title="Compare your UI with an uploaded screenshot">Compare</button>}
-            {role === 'development' && canRun && <button className="button outline small" onClick={() => setShowPreview(true)} title="Run the code in an isolated frame">Run current preview</button>}
+            {previewAvailable && <button className="button outline small" onClick={() => setSplit('__preview__')} title="Show a file and the running output together">Code &amp; output</button>}
+            {previewAvailable && <button className="button outline small" onClick={() => setShowStaticPreview(true)} title="Compare the UI with an uploaded screenshot">Compare</button>}
+            {canRun && <button className="button outline small" onClick={() => setShowPreview(true)} title="Run the code in an isolated frame">Run current preview</button>}
             <button className={`ide-icon${split !== null ? ' on' : ''}`} aria-label="Split editor" aria-pressed={split !== null} title={split === null ? 'View two things side by side' : 'Close the side view'} onClick={() => setSplit(split === null ? defaultSplit() : null)}><Columns2 size={16}/></button>
           </div>
         </div>

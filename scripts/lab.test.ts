@@ -404,3 +404,16 @@ test('the pack installs the given skills and tells the agent when to use each', 
   assert.match(agents, /Skills installed in/); assert.match(agents, /bm-prd-creator/); assert.match(agents, /prodops-handoff/)
   assert.doesNotMatch(await (await buildAgentPack(p, { platform: 'web' })).file('AGENTS.md')!.async('string'), /Skills installed in/)
 })
+
+import { existsSync, readFileSync } from 'node:fs'
+test('every upstream repository is installed with its licence, notice and reference documents', () => {
+  for (const repo of ['bm-skills', 'agent-os', 'design-os', 'agentcanon']) {
+    assert.ok(existsSync(`.agents/upstream/${repo}/LICENSE`), `${repo} licence`)
+    assert.match(readFileSync(`.agents/upstream/${repo}/LICENSE`, 'utf8'), /MIT License/)
+    assert.ok(existsSync(`.agents/upstream/${repo}/README.md`), `${repo} README`)
+  }
+  for (const f of ['bm-skills/AGENTS.md', 'bm-skills/CLAUDE.md', 'design-os/AGENTS.md', 'design-os/CLAUDE.md', 'agentcanon/AGENTS.md', 'agentcanon/CLAUDE.md', 'build-new/AGENTS.md', 'build-new/CLAUDE.md', 'design-os/docs/usage.md', 'agent-os/profiles/default/global/tech-stack.md']) assert.ok(existsSync(`.agents/upstream/${f}`), f)
+  const notice = readFileSync('.agents/UPSTREAM.md', 'utf8')
+  for (const sha of ['7bee335', 'e892e61', '2f14c46', '792bb0c']) assert.ok(notice.includes(sha), sha)
+  for (const skill of ['bm-prd-creator', 'bm-design-system', 'bm-skill-builder', 'bm-favicon-creator', 'agentcanon-repo', 'agentcanon-manifest', 'frontend-design']) assert.ok(existsSync(`.agents/skills/${skill}/SKILL.md`), skill)
+})

@@ -129,7 +129,7 @@ try {
   await click('Download agent pack', lab())
   await act(async () => { await tick(1500) })
   const zip = await JSZip.loadAsync(await exported!.arrayBuffer())
-  for (const name of ['AGENTS.md', 'CLAUDE.md', 'GEMINI.md', '.cursor/rules/prodops.mdc', 'prompts/iterate.md', 'build-plan/prd.html', 'design/design-system.md', 'specs/development/code-standards/index.yaml', '.agents/skills/bm-prd-creator/SKILL.md', '.agents/skills/bm-design-system/references/agent-instructions.md', '.agents/commands/agent-os/inject-standards.md', '.agents/UPSTREAM.md']) assert.ok(zip.file(name), name)
+  for (const name of ['AGENTS.md', 'CLAUDE.md', 'GEMINI.md', '.cursor/rules/prodops.mdc', 'prompts/iterate.md', 'build-plan/prd.html', 'design/design-system.md', 'specs/development/code-standards/index.yaml', '.agents/skills/bm-prd-creator/SKILL.md', '.agents/skills/bm-design-system/references/agent-instructions.md', '.agents/commands/agent-os/inject-standards.md', '.agents/UPSTREAM.md', '.agents/upstream/design-os/AGENTS.md', '.agents/upstream/design-os/CLAUDE.md', '.agents/upstream/agent-os/README.md', '.agents/upstream/bm-skills/AGENTS.md', '.agents/upstream/agentcanon/README.md', '.agents/upstream/design-os/docs/usage.md']) assert.ok(zip.file(name), name)
   assert.match(await zip.file('AGENTS.md')!.async('string'), /Skills installed in/)
   assert.deepEqual(requests, [], 'the Lab made no network requests')
   console.log('Lab smoke passed: readiness, instant draft, versions, iteration brief and agent pack, with no network.')

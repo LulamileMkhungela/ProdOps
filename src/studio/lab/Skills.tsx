@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import JSZip from 'jszip'
 import type { StudioProject } from '../model'
-import { listCommands, listSkills, loadInstallFiles, type CommandInfo, type SkillInfo } from '../skills'
+import { listCommands, listSkills, loadInstallFiles, upstreamPaths, type CommandInfo, type SkillInfo } from '../skills'
 import { SKILL_GUIDE } from './agentpack'
 import { extractRequirements } from './readiness'
 
@@ -13,6 +13,7 @@ const SOURCES = [
   ['agent-os', 'https://github.com/buildermethods/agent-os'],
   ['design-os', 'https://github.com/buildermethods/design-os'],
   ['agentcanon', 'https://github.com/buildermethods/agentcanon'],
+  ['build-new', 'https://github.com/buildermethods/build-new'],
 ] as const
 
 /** Which skills help right now, from what the project already has. */
@@ -58,6 +59,8 @@ export function Skills({ project, notify }: Props) {
     <h3 className="lab-h">Commands ({commands.length})</h3>
     {groups.map(g => <details key={g} className="lab-group"><summary>{g} ({commands.filter(c => c.group === g).length})</summary>
       <ul className="lab-list">{commands.filter(c => c.group === g).map(c => <li key={c.path}><code>{c.name}</code>: {c.title}</li>)}</ul></details>)}
-    <p className="lab-fine">Copied unchanged from open-source repositories under the MIT licence, with their licence texts and commit versions in <code>.agents/UPSTREAM.md</code>: {SOURCES.map(([n, u], i) => <span key={n}>{i ? ', ' : ''}<a className="lab-link inline" href={u} target="_blank" rel="noreferrer noopener">{n}</a></span>)}. The <code>prodops-*</code> skills are original to ProdOps.</p>
+    <h3 className="lab-h">Reference documents ({upstreamPaths.filter(p => p.endsWith('.md')).length})</h3>
+    <p className="lab-fine">Every Markdown file from the five buildermethods repositories (README, AGENTS, CLAUDE, CHANGELOG, Design OS docs, Agent OS profile) is in <code>.agents/upstream/</code> and in every download. Their AGENTS.md and CLAUDE.md describe how to work inside those repositories, so they are reference, not rules for your project.</p>
+    <p className="lab-fine">Copied unchanged from open-source repositories (build-new states “free to use, fork, and adapt”), with their licence texts and commit versions in <code>.agents/UPSTREAM.md</code>: {SOURCES.map(([n, u], i) => <span key={n}>{i ? ', ' : ''}<a className="lab-link inline" href={u} target="_blank" rel="noreferrer noopener">{n}</a></span>)}. The <code>prodops-*</code> skills are original to ProdOps.</p>
   </div>
 }

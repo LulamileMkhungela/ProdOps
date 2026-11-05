@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- All Markdown files from the five buildermethods repositories (README, AGENTS, CLAUDE, CHANGELOG, docs, profile, community files) are installed unchanged under `.agents/upstream/`, with licences, and travel in every pack and project download. Root `CLAUDE.md` now links to `AGENTS.md`.
+
 - Skills installed: the four `bm-*` skills, the two agentcanon skills, `frontend-design` and the Agent OS and Design OS commands, copied unchanged from their MIT repositories (sources, versions and licences in `.agents/UPSTREAM.md`), plus five new `prodops-*` skills. They ship in every agent pack and project download, are listed in the Lab's new Skills tab, and are loaded by the AI server. They are bundled as lazy chunks, so they do not enlarge the first page load. `npm run kit` no longer writes renamed copies of the skills.
 - Examples removed: the Orbit sample project, the "Use example template" buttons, example text in step templates and the example briefs in the five-stage flow. New projects show outlines (headings and questions only). A saved Orbit project from an earlier version is dropped on load; any other saved project is kept as it was.
 - `test:studio` passes (it was failing for lack of the `.agents` folder).

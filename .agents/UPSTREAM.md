@@ -20,8 +20,20 @@ Everything here is plain Markdown that any agent reads. Install it for all your 
 - `design-os/`: product vision, roadmap, data shape, design tokens, shell, section and screen design, export. From [buildermethods/design-os](https://github.com/buildermethods/design-os) @ 2f14c46.
 - `prodops/`: the ProdOps editions of the same commands plus the workflow commands, written to ProdOps's file layout by `npm run kit`.
 
+## Reference documents (`.agents/upstream/`)
+
+Every Markdown file in the buildermethods repositories, copied unchanged (the ones inside `skills/` and the command folders are already installed above). Their own `AGENTS.md` and `CLAUDE.md` describe how to work *inside those repositories*, so they are kept here as reference and are **not** written to the root of your project, where they would override your own `AGENTS.md`.
+
+| Folder | Repository | Commit | Contents |
+| --- | --- | --- | --- |
+| `bm-skills/` | [bm-skills](https://github.com/buildermethods/bm-skills) | 7bee335 | `README`, `AGENTS`, `CLAUDE`, `CHANGELOG`, plugin manifest, licence |
+| `agent-os/` | [agent-os](https://github.com/buildermethods/agent-os) | e892e61 | `README`, `CHANGELOG`, default tech-stack profile, `.github` community files, licence |
+| `design-os/` | [design-os](https://github.com/buildermethods/design-os) | 2f14c46 | `README`, `AGENTS`, `CLAUDE`, `CHANGELOG`, eight `docs/` guides, `.github` community files, licence |
+| `agentcanon/` | [agentcanon](https://github.com/buildermethods/agentcanon) | 792bb0c | `README`, `AGENTS`, `CLAUDE`, licence |
+| `build-new/` | [build-new](https://github.com/buildermethods/build-new) | 9321433 | `README`, `AGENTS`, `CLAUDE`, `CHANGELOG`, deployment guide (Markdown only; the Rails app is not copied) |
+
 ## Licences
 
-The upstream files are copied unchanged and are MIT licensed by CasJam Media LLC (Builder Methods). Their licence texts are in `.agents/upstream/`. The `frontend-design` skill's header says "Complete terms in LICENSE.txt", but upstream ships no such file, so its terms are those of the design-os repository (MIT) as far as can be verified. The `prodops-*` skills are part of ProdOps (MIT).
+`bm-skills`, `agent-os`, `design-os` and `agentcanon` are MIT licensed by CasJam Media LLC (Builder Methods); each licence text is in its folder above. `build-new` has no licence file; its README says "Open source. Free to use, fork, and adapt.", so only its Markdown is included, unchanged and credited. If you need a formal licence for it, ask the authors.
 
-Upstream repositories checked: `agent-os`, `design-os`, `bm-skills` and `agentcanon` are MIT. `build-new` (a Rails starter) has no licence file and is not included.
+The `frontend-design` skill's header says "Complete terms in LICENSE.txt", but upstream ships no such file, so its terms are those of the design-os repository (MIT) as far as can be verified. The `prodops-*` skills are part of ProdOps (MIT).

@@ -2,7 +2,7 @@
 /// <reference types="vite/client" />
 const skillLoaders = import.meta.glob('../../.agents/skills/**/*', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>
 const commandLoaders = import.meta.glob('../../.agents/commands/**/*', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>
-const upstreamLoaders = import.meta.glob('../../.agents/{UPSTREAM.md,upstream/*}', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>
+const upstreamLoaders = import.meta.glob('../../.agents/{UPSTREAM.md,upstream/**/*}', { query: '?raw', import: 'default' }) as Record<string, () => Promise<string>>
 
 const rel = (path: string) => path.replace('../../', '')
 async function load(loaders: Record<string, () => Promise<string>>): Promise<Record<string, string>> {
@@ -10,6 +10,7 @@ async function load(loaders: Record<string, () => Promise<string>>): Promise<Rec
   return Object.fromEntries(entries)
 }
 
+export const upstreamPaths = Object.keys(upstreamLoaders).map(rel).filter(p => p !== '.agents/UPSTREAM.md')
 export const skillPaths = Object.keys(skillLoaders).map(rel)
 export const commandPaths = Object.keys(commandLoaders).map(rel)
 export const loadSkillFiles = () => load(skillLoaders)

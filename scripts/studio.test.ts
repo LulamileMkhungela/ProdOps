@@ -5,7 +5,14 @@ import { handleStudio, loadRoleSkills, loadAllSkillMarkdown, parseFiles, studioC
 import { applyGenerated, contextFor, initialProject, readProject, reconcileStepChanges, updateFile } from '../src/studio/model'
 import { handleGithubReference } from '../server/github-reference'
 import { HISTORY_KEY, LEGACY_KEY, loadHistory } from '../src/studio/history'
-import { makeDashboardProject } from '../src/studio/dashboard'
+const approvedProject = () => {
+  const p = freshProject()
+  const html = '<!doctype html><html><body><h1>Delivery overview</h1><ul id="work-items"></ul><script src="app.js"></script></body></html>'
+  const js = "document.getElementById('work-items').textContent = 'Finalize onboarding'"
+  const stepDecisions = Object.fromEntries(Object.entries(workflows).flatMap(([role, stages]) => stages.map(st => [`${role}/${st.id}`, { status: 'approved' as const, note: '' }])))
+  return { ...p, stepDecisions, files: [...p.files, { path: 'solution/index.html', content: html }, { path: 'solution/app.js', content: js }] }
+}
+import { freshProject } from '../src/studio/history'
 import { JSDOM } from 'jsdom'
 import { workflows } from '../src/studio/workflows'
 import { readdir } from 'node:fs/promises'
@@ -14,14 +21,14 @@ import type { PDFDocumentProxy } from 'pdfjs-dist'
 
 test('actual relevant skills and referenced PRD phases are loaded', async () => {
   const business = await loadRoleSkills('business')
-  assert.match(business, /prd-creator\/SKILL\.md/)
-  assert.match(business, /prd-creator\/steps\/brain-dump\.md/)
+  assert.match(business, /bm-prd-creator\/SKILL\.md/)
+  assert.match(business, /bm-prd-creator\/steps\/brain-dump\.md/)
   const design = await loadRoleSkills('design')
   assert.match(design, /frontend-design\/SKILL\.md/)
-  assert.match(design, /design-system\/references\/agent-instructions\.md/)
-  assert.match(await loadRoleSkills('development'), /agents-repo\/SKILL\.md/)
-  assert.match(await loadRoleSkills('quality'), /quality-engineering\/SKILL\.md/)
-  assert.match(await loadRoleSkills('delivery'), /delivery-operations\/SKILL\.md/)
+  assert.match(design, /bm-design-system\/references\/agent-instructions\.md/)
+  assert.match(await loadRoleSkills('development'), /prodops-handoff\/SKILL\.md/)
+  assert.match(await loadRoleSkills('quality'), /prodops-quality-engineering\/SKILL\.md/)
+  assert.match(await loadRoleSkills('delivery'), /prodops-delivery-operations\/SKILL\.md/)
 })
 test('all Agent OS commands are mapped to workflow steps', async () => {
   const commands = (await readdir('.agents/commands/prodops')).filter(x => x.endsWith('.md')).map(x => x.slice(0, -3))
@@ -68,7 +75,7 @@ test('AI requests use skill Markdown, handle optional questions and protect prov
     assert.equal((await fetch(base + '/off', req)).status, 503)
     assert.equal((await fetch(base, { ...req, headers: { ...req.headers, Origin: 'https://evil.example' } })).status, 403)
     assert.deepEqual(await (await fetch(base, req)).json(), { question: 'Who will use it?' })
-    assert.match(prompt, /prd-creator\/SKILL.md/); assert.match(prompt, /quality-engineering\/SKILL.md/); assert.match(prompt, /steps\/brain-dump.md/); assert.match(user, /A markdown note/); assert.equal(auth, 'Bearer secret')
+    assert.match(prompt, /bm-prd-creator\/SKILL.md/); assert.match(prompt, /prodops-quality-engineering\/SKILL.md/); assert.match(prompt, /steps\/brain-dump.md/); assert.match(user, /A markdown note/); assert.equal(auth, 'Bearer secret')
     ask = false
     assert.deepEqual(await (await fetch(base, req)).json(), { files: generated }, 'a clear brief can produce files without asking')
     const imageRequest = { role:'business', step:'vision', answer:'Q: Who?\nA: Team', images:['data:image/png;base64,aGVsbG8='], spec:'A detailed project specification.', context:'PDF extracted text', instruction:'' }
@@ -114,7 +121,7 @@ test('project history migrates the prior project and refuses to overwrite invali
   const storage = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value), removeItem: (key: string) => values.delete(key) } as unknown as Storage
   values.set(LEGACY_KEY, JSON.stringify({ ...initialProject, name: 'Existing work', spec: 'Stored project context' }))
   const migrated = loadHistory(storage)
-  assert.ok(migrated.projects.some(x => x.project.name === 'Existing work')); assert.equal(migrated.projects[0].project.name, 'Orbit dashboard')
+  assert.ok(migrated.projects.some(x => x.project.name === 'Existing work')); assert.equal(migrated.projects.length, 1, 'no example project is added')
   values.set(HISTORY_KEY, JSON.stringify(migrated))
   assert.equal(loadHistory(storage).activeId, migrated.activeId)
   values.set(HISTORY_KEY, '{broken')
@@ -145,25 +152,6 @@ test('optional GitHub import permits only public repository files and checks the
   } finally { await new Promise<void>(resolve => server.close(() => resolve())) }
 })
 
-
-test('dashboard example contains complete role work, requirements, design system and code', async () => {
-  const project = makeDashboardProject()
-  assert.equal(project.sample, true)
-  for (const [role, stages] of Object.entries(workflows)) for (const stage of stages) {
-    assert.equal(project.stepDecisions[`${role}/${stage.id}`].status, 'approved')
-    for (const name of ['shape.md','plan.md','references.md','standards.md']) assert.ok(project.files.some(f => f.path === `specs/${role}/${stage.id}/${name}`))
-  }
-  for (const path of ['specs/business/requirements/business-requirements.md','specs/business/requirements/functional-requirements.md','specs/design/screens/design-requirements.md','design/design-tokens.json','design/components.md','solution/index.html','solution/styles.css','solution/app.js']) assert.ok(project.files.some(f=>f.path===path),path)
-  assert.match(contextFor(project,'business'), /specs\/delivery\/operations\/shape.md/)
-  assert.match(await loadAllSkillMarkdown(), /database-engineering\/SKILL.md/)
-})
-test('dashboard app filters tasks and updates status and metrics', () => {
-  const project=makeDashboardProject(), js=project.files.find(f=>f.path==='solution/app.js')!.content, html=project.files.find(f=>f.path==='solution/index.html')!.content
-  const dom=new JSDOM(html.replace('<script src="app.js"></script>',''),{url:'https://dashboard.example/',runScripts:'outside-only'});const w=dom.window;w.eval(js)
-  assert.equal(w.document.getElementById('total')!.textContent,'4');assert.equal(w.document.getElementById('completed')!.textContent,'1')
-  const filter=w.document.getElementById('priority-filter') as HTMLSelectElement;filter.value='High';filter.dispatchEvent(new w.Event('change',{bubbles:true}));assert.match(w.document.getElementById('work-items')!.textContent!,/Finalize onboarding/);assert.doesNotMatch(w.document.getElementById('work-items')!.textContent!,/Review analytics/)
-  ;(w.document.querySelector('button[aria-label="Mark done Finalize onboarding"]') as HTMLButtonElement).click();assert.equal(w.document.getElementById('completed')!.textContent,'2');w.close()
-})
 
 test('Figma connector validates links and imports bounded read-only frame context without exposing the token', async () => {
   const { figmaConfig, handleFigmaReference } = await import('../server/figma-reference')
@@ -205,16 +193,18 @@ test('Figma errors and oversized responses fail safely, with redirects disabled'
   } finally {await new Promise<void>(resolve=>server.close(()=>resolve()))}
 })
 
-test('history preserves an edited old example when adding the dashboard', () => {
-  const old={...initialProject,name:'CASA',sample:true,spec:'My saved changes',files:[{path:'solution/app.js',content:'my code'}]}
-  const values=new Map([[HISTORY_KEY,JSON.stringify({version:2,activeId:'example-casa-v1',projects:[{id:'example-casa-v1',project:old}]})]])
+test('history keeps an edited old example as a normal project and retires the seeded one', () => {
+  const old={...initialProject,name:'CASA',spec:'My saved changes',files:[{path:'solution/app.js',content:'my code'}]}
+  const orbit={...initialProject,name:'Orbit dashboard'}
+  const values=new Map([[HISTORY_KEY,JSON.stringify({version:2,activeId:'example-orbit-dashboard-v1',projects:[{id:'example-orbit-dashboard-v1',project:orbit},{id:'example-casa-v1',project:old}]})]])
   const storage={getItem:(k:string)=>values.get(k)??null,setItem:(k:string,v:string)=>values.set(k,v),removeItem:(k:string)=>values.delete(k)} as unknown as Storage
-  const history=loadHistory(storage);assert.equal(history.projects[0].project.name,'Orbit dashboard');assert.equal(history.activeId,'example-orbit-dashboard-v1');const preserved=history.projects.find(p=>p.id==='example-casa-v1')!.project;assert.equal(preserved.sample,false);assert.equal(preserved.spec,'My saved changes');assert.equal(preserved.files[0].content,'my code')
-  assert.match(contextFor(makeDashboardProject(),'design'),/solution\/app.js/)
+  const history=loadHistory(storage);assert.equal(history.projects.length,1);assert.equal(history.activeId,'example-casa-v1')
+  const preserved=history.projects[0].project;assert.equal(preserved.spec,'My saved changes');assert.equal(preserved.files[0].content,'my code')
+  assert.match(contextFor(approvedProject(),'design'),/solution\/app.js/)
 })
 
 test('editing design assets and solution code invalidates related approved steps', () => {
-  const project=makeDashboardProject()
+  const project=approvedProject()
   const design=reconcileStepChanges(project,updateFile(project,'design/design-tokens.json','{}'))
   assert.equal(design.stepDecisions['design/system'].status,'revisit');assert.equal(design.stepDecisions['design/screens'].status,'revisit');assert.equal(design.stepDecisions['development/implementation'].status,'revisit')
   const code=reconcileStepChanges(project,updateFile(project,'solution/app.js','// changed'))
@@ -223,7 +213,7 @@ test('editing design assets and solution code invalidates related approved steps
 
 test('interactive preview uses current code and retains the sandbox content restrictions', async () => {
   const dom = new JSDOM('');const original=globalThis.DOMParser;Object.assign(globalThis,{DOMParser:dom.window.DOMParser})
-  try { const {staticPreview}=await import('../src/studio/static-preview');const project=makeDashboardProject();const files=project.files.map(f=>f.path==='solution/index.html'?{...f,content:f.content.replace('Delivery overview','Current changes')}:f)
+  try { const {staticPreview}=await import('../src/studio/static-preview');const project=approvedProject();const files=project.files.map(f=>f.path==='solution/index.html'?{...f,content:f.content.replace('Delivery overview','Current changes')}:f)
     const preview=staticPreview(files,true)!;assert.match(preview,/Current changes/);assert.match(preview,/work-items/);assert.match(preview,/script-src/);assert.match(preview,/default-src 'none'/);assert.doesNotMatch(preview,/<script src=/)
     const app=new JSDOM(preview,{runScripts:'dangerously',url:'https://isolated.example/'});assert.match(app.window.document.getElementById('work-items')!.textContent!,/Finalize onboarding/);app.window.close()
   } finally {Object.assign(globalThis,{DOMParser:original});dom.window.close()}

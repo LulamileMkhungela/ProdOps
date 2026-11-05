@@ -170,7 +170,7 @@ const checks = [
     return (
       /placeholder="e\.g\. A booking tool/.test(out) &&
       ['Name the problem', 'Say who uses it', 'State the must-haves'].every((line) => out.includes(line)) &&
-      out.includes('Or start from an example') &&
+      !out.includes('start from an example') &&
       out.includes('Write at least a sentence')
     )
   })()],
@@ -415,10 +415,10 @@ const checks = [
     const out = renderToString(<StoreProvider><App /></StoreProvider>)
     return (
       out.includes('lz-side-back') &&
-      out.includes('Back to the ProdOps site') &&
+      out.includes('Open the role workspace') &&
       // and again in the brand row, which is on screen at every width
       out.includes('lz-brand-site') &&
-      /href="\/"/.test(out)
+      /href="\.?\/"/.test(out)
     )
   })()],
 

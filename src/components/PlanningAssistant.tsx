@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Project } from '../types'
 import { useStore } from '../lib/store'
 import { Icon } from './Icons'
+import { apiFetch } from '../studio/api'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 const starters: Record<string, string> = {
@@ -28,7 +29,7 @@ export function PlanningAssistant({ project, stage }: { project: Project; stage:
   useEffect(() => {
     if (!open) return
     const abort = new AbortController()
-    fetch('/api/assistant', { signal: abort.signal }).then(async r => { if (!r.ok) throw new Error(); return r.json() }).then(data => setConfigured(Boolean(data.configured))).catch(() => { if (!abort.signal.aborted) setConfigured(false) })
+    apiFetch('/api/assistant', { signal: abort.signal }).then(async r => { if (!r.ok) throw new Error(); return r.json() }).then(data => setConfigured(Boolean(data.configured))).catch(() => { if (!abort.signal.aborted) setConfigured(false) })
     return () => abort.abort()
   }, [open])
   async function send(text: string) {
@@ -39,7 +40,7 @@ export function PlanningAssistant({ project, stage }: { project: Project; stage:
     setMessages(next); setInput(''); setError(''); setBusy(true)
     const context = [`Current step: ${stage}`, `Product description: ${project.idea || 'Not provided yet.'}`, `Suggested sections (not necessarily approved): ${project.sections.map(s => s.name).join(', ') || 'None yet.'}`, `Builder notes: ${JSON.stringify(project.decisions ?? {})}`].join('\n').slice(0, 12000)
     try {
-      const response = await fetch('/api/assistant', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Prodops-Access': access }, body: JSON.stringify({ messages: next, context }) })
+      const response = await apiFetch('/api/assistant', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Prodops-Access': access }, body: JSON.stringify({ messages: next, context }) })
       const data = await response.json()
       if (!response.ok || typeof data.reply !== 'string') throw new Error(data.error || 'The assistant could not respond.')
       setMessages([...next, { role: 'assistant', content: data.reply }])

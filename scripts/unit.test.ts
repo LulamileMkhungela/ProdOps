@@ -604,3 +604,36 @@ test('the auto-seeded sample is not treated as the builder’s product', () => {
   })
   assert.equal(migrateProject(JSON.parse(JSON.stringify(sample))), null)
 })
+
+// ---- explorer tree: order, numbering and moving ----
+import { buildEntries, moveEntry, visibleFiles, isKeep } from '../src/studio/tree'
+{
+  const f = (path: string) => ({ path, content: '' })
+  const base = 'specs/design/system/'
+  const files = [f(base + 'a.md'), f(base + 'b.md'), f(base + 'docs/.gitkeep'), f(base + 'docs/x.md'), f(base + 'c.md')]
+  test('tree: folders come from paths and the marker file is hidden from counts', () => {
+    const entries = buildEntries(files, base)
+    assert.deepEqual(entries.map(e => `${e.kind}:${e.name}`), ['file:a.md', 'file:b.md', 'folder:docs', 'file:c.md'])
+    assert.equal(isKeep(base + 'docs/.gitkeep'), true)
+    assert.equal(visibleFiles(files).length, 4)
+  })
+  test('tree: move before, after and into a folder', () => {
+    const entries = buildEntries(files, base)
+    const [a, b, docs, c] = entries
+    const afterC = moveEntry(files, a, c, 'after')!
+    assert.deepEqual(buildEntries(afterC, base).map(e => e.name), ['b.md', 'docs', 'c.md', 'a.md'])
+    const beforeA = moveEntry(files, c, a, 'before')!
+    assert.deepEqual(buildEntries(beforeA, base).map(e => e.name), ['c.md', 'a.md', 'b.md', 'docs'])
+    const into = moveEntry(files, b, docs, 'into')!
+    assert.ok(into.some(x => x.path === base + 'docs/b.md') && !into.some(x => x.path === base + 'b.md'))
+    assert.equal(moveEntry(files, docs, docs, 'into'), null)
+    assert.equal(moveEntry(files, a, b, 'into'), null, 'a file is not a drop target for moving into')
+    const folderMove = moveEntry([...files, f(base + 'other/y.md')], docs, buildEntries([...files, f(base + 'other/y.md')], base)[4], 'into')!
+    assert.ok(folderMove.some(x => x.path === base + 'other/docs/x.md'))
+  })
+  test('tree: a name clash blocks a move into a folder', () => {
+    const clash = [f(base + 'a.md'), f(base + 'docs/a.md')]
+    const [a, docs] = buildEntries(clash, base)
+    assert.equal(moveEntry(clash, a, docs, 'into'), null)
+  })
+}

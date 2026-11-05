@@ -24,30 +24,6 @@ import { describeIntake, profileIdea } from '../engine/intake'
 import { Icon } from './Icons'
 import { NextStepGuide } from './NextStepGuide'
 
-/**
- * Four starting points, each an example of a *complete* answer rather than a
- * category. The label is short on purpose: a chip that repeats the whole
- * sentence is unreadable in a row of four.
- */
-const EXAMPLES: { label: string; text: string }[] = [
-  {
-    label: 'Mobile grooming',
-    text: 'A booking tool for mobile dog groomers: owners pick a slot, the groomer sees the day route, and payment is taken on arrival. It has to work on a phone, offline.',
-  },
-  {
-    label: 'Clinic front desk',
-    text: 'A clinic front desk that registers patients, books appointments, and keeps each visit’s notes and invoice in one place. Reception must not need a manual.',
-  },
-  {
-    label: 'Artisan marketplace',
-    text: 'A marketplace where township artisans list products, buyers pay into escrow, and disputes pause the payout until they are resolved.',
-  },
-  {
-    label: 'Volunteer roster',
-    text: 'A tool for scheduling volunteer shifts at a food bank: staff publish the roster, volunteers swap shifts, and hours are logged for funders.',
-  },
-]
-
 const GUIDANCE = [
   { do: 'Name the problem', detail: 'what is broken today, and for whom' },
   { do: 'Say who uses it', detail: 'the one person whose day it changes' },
@@ -159,21 +135,6 @@ export function BriefComposer() {
           <Icon name="AlertTriangle" size={12} /> Write at least a sentence — what it is, who it is for, what it must do.
         </p>
       )}
-
-      <div className="lz-compose-examples">
-        <span>Or start from an example:</span>
-        {EXAMPLES.map((example) => (
-          <button
-            key={example.label}
-            type="button"
-            className="lz-compose-example"
-            onClick={() => setValue(example.text)}
-            title={example.text}
-          >
-            {example.label}
-          </button>
-        ))}
-      </div>
 
       {built && <NextStepGuide onDismiss={() => setBuilt(false)} />}
 

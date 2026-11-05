@@ -41,8 +41,10 @@ function write(path: string, content: string) {
 
 /* 1. The eight tools' own files. Paths are already where the installation
       section copies from, so they are taken as written. */
+// Skills are installed from the upstream folders under `.agents/skills/` (see `.agents/UPSTREAM.md`)
+// and are not regenerated here, so the verbatim files are never overwritten by renamed copies.
 for (const tool of TOOLKIT) {
-  for (const file of tool.files) write(file.path, file.content)
+  for (const file of tool.files) if (!file.path.startsWith('.agents/skills/')) write(file.path, file.content)
 }
 
 /* 2. The ten Design OS commands, as the agent executes them. */
@@ -62,7 +64,8 @@ for (const command of WORKFLOW_COMMANDS) {
 }
 
 /* 4. The frontend-design skill the design phases lean on. */
-write('.agents/skills/frontend-design/SKILL.md', PHASE_SKILL)
+// (frontend-design is installed verbatim from upstream; PHASE_SKILL is no longer written.)
+void PHASE_SKILL
 
 /* 5. The standards layer: the scaffold `/discover-standards` fills in. It is
       copied whole (`cp -r prodops/standards/ .`), so the files say what belongs
@@ -192,7 +195,9 @@ write('LICENSES.md', LICENSES.replace('`../LICENSE`', '`LICENSE`'))
 /* 7. The repo-level instructions, written for whoever — or whatever — works in
       this checkout next. It states the two contexts, the five stages, and where
       the commands live, so an agent reads the same flow the app enforces. */
-write(
+// AGENTS.md is maintained by hand (it carries the current-workspace notes and rules merged from the
+// upstream agent files), so the kit only writes it when it does not exist yet.
+if (!existsSync(join(root, 'AGENTS.md'))) write(
   'AGENTS.md',
   `# ProdOps — agent instructions
 

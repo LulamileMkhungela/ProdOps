@@ -369,16 +369,6 @@ if (compModal) {
 }
 
 
-const startKit = Array.from(w.document.querySelectorAll('button')).find((b) => b.textContent?.includes('Start this kit'))
-click(startKit ?? null)
-await wait(220)
-const kitProject = JSON.parse(w.localStorage.getItem('prodops.projects.v1') ?? '[]')[0]
-const kitCompiled =
-  kitProject?.archetypeId === 'crm' &&
-  kitProject.sections.length > 0 &&
-  String(kitProject.idea).includes('contacts')
-if (!kitCompiled) failed++
-console.log(`${kitCompiled ? 'ok ' : 'ERR'} a kit compiles into a product (${kitProject?.archetypeId}, ${kitProject?.sections?.length} sections)`)
 
 console.log(errors.length ? `\nconsole errors:\n${errors.join('\n')}` : '\nno console errors')
 process.exit(failed || errors.length ? 1 : 0)

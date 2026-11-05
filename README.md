@@ -6,7 +6,7 @@ ProdOps is a role-based product workspace: business, product/UX/UI/CX design, de
 
 ## Live preview
 
-The workspace is published as a static site at <https://lulamilemkhungela.github.io/ProdOps/>. It is built and deployed by `.github/workflows/pages.yml` on every push to `main`. The hosted preview has no server, so AI drafting and Figma/GitHub imports are not available there; editing, the Orbit dashboard example, approvals and exports all work, and everything is stored in your own browser.
+The workspace is published as a static site at <https://lulamilemkhungela.github.io/ProdOps/>. It is built and deployed by `.github/workflows/pages.yml` on every push to `main`. The hosted preview has no server, so AI drafting and Figma/GitHub imports are not available there; editing, the Orbit dashboard example, approvals, exports and the ProdOps Lab (below) all work, and everything is stored in your own browser. The earlier five-stage flow is published beside it at `design.html`.
 
 ## Run it locally
 
@@ -49,10 +49,6 @@ Upload a screenshot separately to compare with the static HTML/CSS preview. The 
 
 To reuse an Angular or other component system, use **Add a reference** to upload multiple `.ts`, `.html`, `.scss`, `.css`, and other supported text files (20 KB per text file), select **Angular** or another frontend style and ask the AI to follow them. The AI can draft editable files in `solution/` during the development implementation step or `design/components/` during design screens; it does not install Angular packages, compile, run tests or guarantee that output matches the original system. Review and build the exported files in an appropriate IDE. This workflow does not connect arbitrary component registries or run Angular locally.
 
-## Orbit dashboard example
-
-Orbit is a fictional delivery dashboard with business and functional requirements, design requirements, named tokens, a component guide, editable code and example work across all five roles. Open the dashboard from the project picker, then choose a role to see its relevant work. In Development, **Try the dashboard** runs the current HTML/CSS/JavaScript in an isolated browser preview; filter work and mark tasks done or reopen them. Data is fictional and in memory; changes to tasks reset on reload. The example has no real users, accounts, shared backend or deployment. Its approvals, research and release checks are illustrative, not real evidence. Any older CASA project already in browser history is retained as a normal saved project so edits are not deleted.
-
 ## Optional server-wide AI setup
 
 Instead of personal keys, an administrator can configure an OpenAI-compatible chat-completions API (which can use OpenAI models) or the Anthropic Messages API (Claude) for a trusted, protected server. Existing ChatGPT, Claude and Codex browser accounts are not connected automatically. Without a provider, the dashboard example, manual editing and exports still work.
@@ -76,9 +72,51 @@ If your network uses a trusted system TLS proxy, start Node with `NODE_USE_SYSTE
 
 This is intended for a trusted single-user environment. The same-origin check is not production authentication, authorization, rate limiting, spending controls or multi-user isolation. Use HTTPS and a protected server for deployment, and consider provider privacy and costs. Manual editing and exports work without a model.
 
+## ProdOps Lab
+
+Open **Guided build** in the sidebar (the header pill shows the next step, e.g. “Guide 3/8”). It walks one path: brief → draft specs → review and approve → standards → design system → scope and milestones → readiness → hand off. Everything in it runs in the browser, so it also works on the static preview. See [docs/GAPS.md](docs/GAPS.md) for why each part exists and what it cannot do.
+
+- **Draft specs** shows the product pattern it detected (change it if it is wrong), then drafts each of the five roles, or all of them, from your brief with no AI model. Files are labelled as template drafts; the scope list is written with the requirements.
+- **Readiness** scores the project for handoff: placeholders behind approvals, contrast, generic palettes and headlines, and a requirement → design → test traceability matrix.
+- **Versions** saves snapshots, compares them with current work, shows which roles must look again, and writes an iteration brief for an agent.
+- **Standards** discovers conventions from code you choose (read in your browser, never uploaded), asks why for each, keeps an `index.yaml`, supports saved profiles, and injects only the relevant standards into a task by reference or by copy.
+- **Design system** generates a reference page (colours, type, buttons, forms, badges, listings, modal; when to use each, sample markup) and agent rules against design drift.
+- **Scope & milestones** has an editable scope (saved outside the step folders, so it never reopens an approval), then drafts an in-scope / out-of-scope list, then an HTML PRD and numbered milestones, each with a prompt (plan first, build only this, write a log) and a log template.
+- **Decisions** is a written guide to common trade-offs (client or server search, fixed or configurable fields, delete or archive, and more).
+- **Agent pack** downloads one zip with `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor rules, Copilot instructions, milestone prompts and your specs. Choose web, Expo or both.
+
+## Studio layout (IDE style)
+
+The Studio is laid out like VS Code or Kiro, so each kind of thing lives in one predictable place:
+
+| Area | What it holds |
+| --- | --- |
+| **Title bar** | The project name (click to rename; a new project starts empty), the project picker, **New project**, the **?** help menu, layout toggles and the one **Download** button. |
+| **Activity bar** (far left) | The five roles. Clicking a role opens its first step. Below them, **Resources** links to https://90n.ai/resources (paid library). |
+| **Steps and files** (second column) | The role's numbered steps with a tick when done, then **Files in this step**: add a file, folder or outline, import files, drag to reorder or move into a folder (numbers follow the order). |
+| **Editor** (centre) | Open files as tabs with a breadcrumb. **Split** puts any file beside another (for example a spec next to its output). A step bar at the bottom has **Back**, **Mark as done** and **Next**. |
+| **Panel** (bottom) | Review, what earlier roles handed over, live problems and a log. Closed on short screens. |
+| **Agent** (far right) | Instant draft for the current step, optional AI, references. |
+| **Status bar** | Project, role > step, problem counts, AI and save state. |
+
+The **?** menu holds the role guide (steps and a video for each role), the whole-project guided build, the worked example, importing a saved project and the five-stage design flow. Below 900px wide the second column and the agent become slide-over drawers.
+
+Role videos are in `public/walkthrough/` (`business.mp4`, `design.mp4`, `development.mp4`, `quality.mp4`, `delivery.mp4`).
+
+## Worked example and video
+
+`examples/clinic-front-desk/` is one complete project: every spec file, the design system, the PRD and milestone prompts, and a finished application you can run. In the app choose **Open the worked example** (left column, under *Your projects*), then Development, then **Run current preview**. The example is opt-in, so a new project still starts empty. Its README says what was generated and what was written by hand. `docs/walkthrough/prodops-walkthrough.mp4` shows every click from an empty app to the running product.
+
+## Skills
+
+`.agents/skills/` holds the installed skills and `.agents/commands/` the slash commands, listed in [.agents/UPSTREAM.md](.agents/UPSTREAM.md). The `bm-*` skills (PRD creator, design system, skill builder, favicon creator), the agentcanon skills, `frontend-design` and the Agent OS and Design OS commands are copied unchanged from the open-source (MIT) repositories at github.com/buildermethods, with their licences and commit versions recorded. Five `prodops-*` skills are original to ProdOps (one per role, plus how to build from a pack). `.claude/skills` links to the same folder, and `CLAUDE.md` links to `AGENTS.md`. Every Markdown file from the five buildermethods repositories (README, AGENTS, CLAUDE, CHANGELOG, the Design OS docs, the Agent OS profile and community files) is kept unchanged under `.agents/upstream/` as reference; their own AGENTS.md and CLAUDE.md describe how to work inside those repositories, so they are not written to the root of your project.
+
+They are used in three places: every **Agent pack** and **Download project** includes them and AGENTS.md says when to reach for each; the Lab's **Skills** tab lists them with copy-ready prompts and a download for installing them on your computer; and the optional AI server loads the role's skills into its prompts.
+
 ## Checks
 
 ```sh
 npm run build
 npm run test:studio
+npm run test:lab
 ```

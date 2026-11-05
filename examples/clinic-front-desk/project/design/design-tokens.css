@@ -1,0 +1,13 @@
+/* PRODOPS TOKENS START */
+:root {
+  --color-primary: #c2410c;
+  --color-background: #fcf8f2;
+  --color-text: #241e1a;
+  --color-surface: #ffffff;
+  --color-muted: #70665e;
+  --color-border: #e9dfd6;
+  --color-success: #16865a;
+  --color-danger: #b3261e;
+  --radius: 10px;
+}
+/* PRODOPS TOKENS END */

@@ -1,0 +1,15 @@
+{
+  "primary": "#c2410c",
+  "background": "#fcf8f2",
+  "text": "#241e1a",
+  "radius": 10,
+  "heading": "Book, treat and sign off visits at the front desk.",
+  "button": "Book a visit",
+  "colors": {
+    "surface": "#ffffff",
+    "muted": "#70665e",
+    "border": "#e9dfd6",
+    "success": "#16865a",
+    "danger": "#b3261e"
+  }
+}

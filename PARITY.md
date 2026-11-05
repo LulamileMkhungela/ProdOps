@@ -144,7 +144,6 @@ the instruction files that ship with them.
 | Favicon Creator | Agent skill | `.agents/skills/favicon-creator/` | `/coverage`, `/tools` |
 | Standards | Workflow | `standards/` + the five standards commands | `/coverage` |
 | ProdOps flow | Workflow | `product-plan/` + the ten stage commands | `/coverage` |
-| The cloned site | Clone | `site/` — 92 pages with content, served at `/` offline | `npm run site-check` (links, assets, no shells, no challenge pages) |
 | Framework targets | Export | React, Vue 3, Svelte 5, Preact, Solid, Angular, Lit, Web Components from one product | `export-check` compiles each with its own compiler |
 | Guides | Documentation | `requirements.md`, `docs/guides/` (seven pages), `docs/LICENSES.md` | `render-check`, `npm test` |
 
@@ -218,21 +217,8 @@ bad: 0
 
 ---
 
-## 9. The canon — the library, the kits, and the workflow commands
-
-The five stages are the method. This section is the rest of the school's material, carried in the
-same build so none of it is a page you leave the workspace to read.
+## 9. The workflow commands
 
 | Surface | Where it is | Count | Verified by |
 | --- | --- | --- | --- |
-| Video series | Library → Series | 6 series, 133 lessons | `scripts/unit.test.ts` (six series, every one with lessons) |
-| Videos | Library → Videos | 24 catalogued of 133 (newest page of `/library/all`) | the same test, plus the row in `/coverage` |
-| Courses | Library → Courses | 4 Pro courses, each pointed at its series | `/coverage` → Canon |
-| Workshops | Library → Workshops | 16: 2 live, 12 replays, 2 on demand | `/coverage` → Canon |
-| Articles | Library → Articles | 21, dated | `/coverage` → Canon |
-| Build kits | Build kits (`/kits`) | 6, each naming a real archetype | `npm run smoke` clicks Start and asserts a CRM compiles |
 | Commands | `.agents/commands/prodops/` | 20: ten stage, five standards, five workflow | `render-check` + `unit.test.ts` |
-
-Every row is data in `src/data/builderMethods.ts` — scraped 2026-10-30, each entry carrying the
-upstream URL its `Open` arrow uses. Nothing on the two pages is fetched at runtime, so a kit or a
-series reads the same offline as it does with a connection.

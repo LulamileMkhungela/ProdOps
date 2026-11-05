@@ -6,8 +6,6 @@ import { buildPackage } from '../export/package'
 import { TRACK } from './FlowsPage'
 import { BLOCK_COMPONENT_NAMES } from '../engine/system'
 import { FRAMEWORKS } from '../export/frameworks'
-import { ARCHETYPES } from '../engine'
-import { ARTICLES, COURSES, KITS, SERIES, SESSIONS, VIDEOS } from '../data/builderMethods'
 
 type State = 'pass' | 'warn'
 
@@ -173,31 +171,10 @@ export function CoveragePage({ project }: { project: Project }) {
         ],
       },
       {
-        /* The canon is not part of the export — a coding agent does not need the
-           school's video catalogue — so these rows are checked against the data
-           in this build rather than against the package. They exist because the
-           library page prints counts, and a count in prose is a claim. */
         id: 'canon',
-        title: 'The canon — library and kits',
-        note: 'Every series, kit, course, workshop and article the workspace reads, counted where it is stored.',
+        title: 'Workflow commands',
+        note: 'The commands that carry a shaped idea through spec, tasks, code and verification.',
         rows: [
-          row(
-            'Series',
-            `${SERIES.length} series, ${SERIES.reduce((n, s) => n + s.lessons, 0)} lessons in the catalogue`,
-            SERIES.length === 6 && SERIES.every((s) => s.lessons > 0),
-            SERIES.map((s) => `${s.title} (${s.lessons})`),
-          ),
-          row(
-            'Build kits',
-            'every kit names an archetype the compiler actually has, and a description it can read',
-            KITS.length === 6 &&
-              KITS.every((kit) => ARCHETYPES.some((entry) => entry.id === kit.archetypeId) && kit.idea.trim().length >= 40),
-            KITS.map((kit) => `${kit.name} → ${kit.archetypeId}`),
-          ),
-          row('Videos', `${VIDEOS.length} catalogued of 133 in the library, each dated by the scrape`, VIDEOS.length >= 20, ['src/data/builderMethods.ts']),
-          row('Courses', `${COURSES.length} Pro courses, each pointing at its series`, COURSES.length === 4 && COURSES.every((c) => SERIES.some((s) => s.id === c.series)), COURSES.map((c) => c.title)),
-          row('Workshops', `${SESSIONS.length} sessions: ${SESSIONS.filter((s) => s.kind === 'Live').length} live, the rest replay or on demand`, SESSIONS.length >= 14 && SESSIONS.some((s) => s.kind === 'Live'), ['src/data/builderMethods.ts']),
-          row('Articles', `${ARTICLES.length} posts with their dates`, ARTICLES.length === 21, ['src/data/builderMethods.ts']),
           row('Workflow commands', 'the five that turn a spec into tasks, tasks into code, and descriptions into useful Skills', countPrefix('.agents/commands/prodops/') === 20 && ['write-spec', 'create-tasks', 'implement-tasks', 'orchestrate-tasks', 'improve-skills'].every((name) => has(`.agents/commands/prodops/${name}.md`)), ['.agents/commands/prodops/{write-spec,create-tasks,implement-tasks,orchestrate-tasks,improve-skills}.md']),
         ],
       },

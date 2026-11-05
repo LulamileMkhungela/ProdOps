@@ -1,4 +1,4 @@
-/** Role-specific process steps and their associated Agent OS instructions. */
+/** Role-specific process steps and their associated command instructions. */
 export type Role = 'business' | 'design' | 'development' | 'quality' | 'delivery'
 export interface ProcessStep { id: string; label: string; purpose: string; question: string; suggestion: string; commands: string[] }
 const step = (id: string, label: string, purpose: string, question: string, suggestion: string, commands: string[]): ProcessStep => ({ id, label, purpose, question, suggestion, commands })

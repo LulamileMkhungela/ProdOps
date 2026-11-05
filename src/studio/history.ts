@@ -14,7 +14,9 @@ export const LEGACY_KEY = 'prodops.role-studio.v1'
 export interface History { version: 2; activeId: string; projects: { id: string; project: StudioProject }[] }
 export const freshProject = (): StudioProject => ({ ...initialProject, files: [...starterDesignFiles(), ...starterRequirements()], references: [], answers: {}, stepDecisions: {} })
 const id = () => globalThis.crypto?.randomUUID?.() ?? `p-${Date.now()}-${Math.random().toString(36).slice(2)}`
-export function makeEntry(project = freshProject()) { return { id: id(), project } }
+/** A brand-new project: no name, no files, no text. Nothing is pre-filled. */
+export const blankProject = (): StudioProject => ({ ...initialProject, name: '', files: [], references: [], answers: {}, stepDecisions: {} })
+export function makeEntry(project = blankProject()) { return { id: id(), project } }
 export function loadHistory(storage: Storage): History {
   try {
     const raw = storage.getItem(HISTORY_KEY)
@@ -30,7 +32,7 @@ export function loadHistory(storage: Storage): History {
     const legacyRaw = storage.getItem(LEGACY_KEY)
     const legacy = legacyRaw ? readProject(JSON.parse(legacyRaw)) : null
     if (legacyRaw && !legacy) throw new Error('Previous project could not be read')
-    const entry = makeEntry(legacy ?? freshProject())
+    const entry = makeEntry(legacy ?? blankProject())
     return withoutExamples({ version: 2, activeId: entry.id, projects: [entry] })
   } catch (error) {
     if (storage.getItem(HISTORY_KEY) || storage.getItem(LEGACY_KEY)) throw error

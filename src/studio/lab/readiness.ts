@@ -76,7 +76,7 @@ export function analyse(project: StudioProject): Report {
   for (const role of Object.keys(workflows) as Role[]) {
     for (const step of workflows[role]) {
       const prefix = `specs/${role}/${step.id}/`
-      const files = project.files.filter(f => f.path.startsWith(prefix))
+      const files = project.files.filter(f => f.path.startsWith(prefix) && !f.path.endsWith('/.gitkeep'))
       const text = files.map(f => f.content).join('\n')
       steps.push({ role, step: step.id, label: step.label, status: project.stepDecisions[`${role}/${step.id}`]?.status ?? 'not_started', files: files.length, words: words(text), placeholders: placeholderCount(text) })
     }

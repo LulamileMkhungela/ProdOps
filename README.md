@@ -91,14 +91,17 @@ The Studio is laid out like VS Code or Kiro, so each kind of thing lives in one 
 
 | Area | What it holds |
 | --- | --- |
-| **Activity bar** (far left, icons) | The five roles: Business, Design, Development, Quality, Delivery. Bottom: Guided build, Agent, Download. |
-| **Explorer** (second column) | For the chosen role: PROCESS (its steps and their status), FILES IN THIS STEP, DELIVERABLES, ALL SPEC FOLDERS, PROJECT. Sections collapse like IDE folders. |
-| **Editor** (centre) | Open files as tabs with a breadcrumb (role > step > file). Compare UI and Run current preview sit on the tab bar. |
-| **Panel** (bottom) | REVIEW (approve, revisit, reject), SHARED CONTEXT (what earlier roles handed over), PROBLEMS (live readiness checks), OUTPUT (a log of what ProdOps just did). |
-| **Agent** (far right) | Hidden until you click the Agent icon: Instant draft, Create with AI, Claude/Figma connection, references, download choices. |
-| **Status bar** | Project, role > step, problem counts (click to open PROBLEMS), AI state, save state, file and skill counts. |
+| **Title bar** | The project name (click to rename; a new project starts empty), the project picker, **New project**, the **?** help menu, layout toggles and the one **Download** button. |
+| **Activity bar** (far left) | The five roles. Clicking a role opens its first step. Below them, **Resources** links to https://90n.ai/resources (paid library). |
+| **Steps and files** (second column) | The role's numbered steps with a tick when done, then **Files in this step**: add a file, folder or outline, import files, drag to reorder or move into a folder (numbers follow the order). |
+| **Editor** (centre) | Open files as tabs with a breadcrumb. **Split** puts any file beside another (for example a spec next to its output). A step bar at the bottom has **Back**, **Mark as done** and **Next**. |
+| **Panel** (bottom) | Review, what earlier roles handed over, live problems and a log. Closed on short screens. |
+| **Agent** (far right) | Instant draft for the current step, optional AI, references. |
+| **Status bar** | Project, role > step, problem counts, AI and save state. |
 
-Toggle buttons for the explorer, panel and agent are in the title bar. Below 900px wide the explorer and agent become slide-over drawers.
+The **?** menu holds the role guide (steps and a video for each role), the whole-project guided build, the worked example, importing a saved project and the five-stage design flow. Below 900px wide the second column and the agent become slide-over drawers.
+
+Role videos are in `public/walkthrough/` (`business.mp4`, `design.mp4`, `development.mp4`, `quality.mp4`, `delivery.mp4`).
 
 ## Worked example and video
 

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Studio round 2: new projects are empty and the name is edited in the title bar; one Download button; the Project folder section, "Back to website", Guided build, Design process and Import moved into a **?** menu or removed; each role opens on its first step with Back / Mark as done / Next; files and folders in a step can be added, imported, dragged and renumbered; split view; Resources entry linking to https://90n.ai/resources; plain-English step copy; a role guide with a video for each role (`public/walkthrough/`); "Start the design system" now also shows when design files exist without tokens; fixed the centre column growing wider than its space when the agent was open.
+
 - Studio restructured like an IDE (VS Code / Kiro): roles on a far-left activity bar, a collapsible explorer for the role's process, files and deliverables, file tabs with a breadcrumb, a bottom panel (Review, Shared context, Problems, Output), the Agent as a right-hand panel opened from its icon, and a status bar. Existing behaviour is kept; the Review, Shared context and Agent controls moved. The walkthrough video was re-recorded on the new layout.
 - Worked example `examples/clinic-front-desk/`: a full project from brief to a running application (specs for all five roles, design tokens and system, standards, PRD, six milestone prompts and logs, and a finished clinic front-desk app). Opt-in: **Open the worked example** under *Your projects*; new projects still start empty. `npm run test:example` tests the application, the project and that the hand-off pack is current; `npm run example:build` refreshes the pack.
 - Video walkthrough `docs/walkthrough/prodops-walkthrough.mp4`: every click from an empty app to the running product, recorded from the static build.

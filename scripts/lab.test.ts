@@ -417,3 +417,11 @@ test('every upstream repository is installed with its licence, notice and refere
   for (const sha of ['7bee335', 'e892e61', '2f14c46', '792bb0c']) assert.ok(notice.includes(sha), sha)
   for (const skill of ['bm-prd-creator', 'bm-design-system', 'bm-skill-builder', 'bm-favicon-creator', 'agentcanon-repo', 'agentcanon-manifest', 'frontend-design']) assert.ok(existsSync(`.agents/skills/${skill}/SKILL.md`), skill)
 })
+
+test('rules from the upstream agent files are merged into the repo and pack instructions', async () => {
+  const root = readFileSync('AGENTS.md', 'utf8')
+  for (const h of ['## Skills, commands and agent files', '## Design rules for the screens ProdOps generates', '## Verification']) assert.ok(root.includes(h), h)
+  assert.ok(existsSync('CLAUDE.md') && readFileSync('CLAUDE.md', 'utf8') === root, 'CLAUDE.md is the same file as AGENTS.md')
+  const agents = await (await buildAgentPack(project(), { platform: 'web' })).file('AGENTS.md')!.async('string')
+  assert.match(agents, /## Verify your work/); assert.match(agents, /real browser/)
+})

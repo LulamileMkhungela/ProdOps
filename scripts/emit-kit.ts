@@ -195,7 +195,9 @@ write('LICENSES.md', LICENSES.replace('`../LICENSE`', '`LICENSE`'))
 /* 7. The repo-level instructions, written for whoever — or whatever — works in
       this checkout next. It states the two contexts, the five stages, and where
       the commands live, so an agent reads the same flow the app enforces. */
-write(
+// AGENTS.md is maintained by hand (it carries the current-workspace notes and rules merged from the
+// upstream agent files), so the kit only writes it when it does not exist yet.
+if (!existsSync(join(root, 'AGENTS.md'))) write(
   'AGENTS.md',
   `# ProdOps — agent instructions
 

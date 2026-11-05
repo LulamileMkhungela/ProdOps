@@ -79,7 +79,12 @@ Ask, and explain the trade-offs of each option in plain language (cost, risk, wh
 ${hasDesign ? designRules(platform) + '\n' : ''}${standards.length ? injectMarkdown(standards, 'reference').replace('## Standards to follow', `## Standards to follow\n\nThe index is \`${INDEX_PATH}\`: read it first, and open a standard only when its description fits the task.`) + '\n' : ''}## Target platform
 ${platformRules(platform).map(r => `- ${r}`).join('\n')}
 
-${withSkills ? skillsSection() + '\n' : ''}## Definition of done
+${withSkills ? skillsSection() + '\n' : ''}## Verify your work
+- After a significant feature, add tests for it and run the whole suite; it must pass before you report the task done.
+- For any UI change, open it in a real browser and walk the user paths end to end. Check desktop and phone widths, and keep screenshots out of the repository (for example in \`tmp/screenshots/\`).
+- Run your verification server on a different port from the one the human uses to browse, so you never take over their page.
+
+## Definition of done
 - Behaviour matches the spec and passes its tests
 - Loading, empty, error and success states exist
 - Accessible: contrast 4.5:1, keyboard or screen-reader reachable, labelled inputs

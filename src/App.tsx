@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from './lib/store'
+import { asset } from './studio/api'
 import { Link, navigate, useRoute } from './lib/router'
 import { PHASES, completedPhases, phaseIndex, sectionStats } from './lib/progress'
 import { downloadProjectZip } from './lib/download'
@@ -235,14 +236,14 @@ export function App() {
     <div className="lz-app" data-theme={theme}>
       <aside className="lz-side" aria-label="ProdOps">
         <div className="lz-brand">
-          <img className="lz-brand-mark" src="/prodops-mark.svg" alt="" width={22} height={22} />
+          <img className="lz-brand-mark" src={asset('prodops-mark.svg')} alt="" width={22} height={22} />
           <span className="lz-brand-name">ProdOps</span>
           <span className="lz-mode-chip" title="Planning is local. The optional assistant sends messages to the configured AI provider.">Local</span>
           {/* The way back to the site, in the one row that is on screen in every
               view at every width. The panel row below it stays for the reader
               who looks there; this one is for the reader who is lost. */}
-          <a className="lz-brand-site" href="/" title="Back to the ProdOps site">
-            <span>Site</span>
+          <a className="lz-brand-site" href="./" title="Open the role workspace">
+            <span>Workspace</span>
             <Icon name="ArrowUpRight" size={12} />
           </a>
         </div>
@@ -335,9 +336,9 @@ export function App() {
             builder got here from a page, and the way back has to be a link in
             the panel they are already looking at — not the browser's back
             button across nine documents. */}
-        <a className="lz-side-back" href="/">
+        <a className="lz-side-back" href="./">
           <Icon name="ArrowLeft" size={13} />
-          <span>Back to the ProdOps site</span>
+          <span>Open the role workspace</span>
           <Icon name="ArrowUpRight" size={12} className="lz-side-back-out" />
         </a>
 
@@ -389,8 +390,8 @@ export function App() {
                 Download .zip
               </button>
               <hr />
-              <a className="lz-menu-link" role="menuitem" href="/">
-                Back to the ProdOps site
+              <a className="lz-menu-link" role="menuitem" href="./">
+                Open the role workspace
               </a>
               <button type="button" role="menuitem" onClick={() => { reset(); navigate(''); setMenuOpen(false); notify('Cleared — describe a product') }}>
                 Clear this product
@@ -417,7 +418,7 @@ export function App() {
           {/* The founder, in his own workspace: the name is credited, and the
               face behind it is the photograph he supplied rather than a mark. */}
           <span className="lz-credit-founder">
-            <img src="/lulamile-mkhungela.png" alt="Lulamile Mkhungela" width={28} height={28} loading="lazy" />
+            <img src={asset('lulamile-mkhungela.png')} alt="Lulamile Mkhungela" width={28} height={28} loading="lazy" />
           </span>
           <span>
             <b>ProdOps</b> — developed by <b>Lulamile Mkhungela</b>. Plans are stored in this browser. The optional assistant sends your messages to the configured AI provider.

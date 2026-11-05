@@ -6,7 +6,7 @@ ProdOps is a role-based product workspace: business, product/UX/UI/CX design, de
 
 ## Live preview
 
-The workspace is published as a static site at <https://lulamilemkhungela.github.io/ProdOps/>. It is built and deployed by `.github/workflows/pages.yml` on every push to `main`. The hosted preview has no server, so AI drafting and Figma/GitHub imports are not available there; editing, the Orbit dashboard example, approvals and exports all work, and everything is stored in your own browser.
+The workspace is published as a static site at <https://lulamilemkhungela.github.io/ProdOps/>. It is built and deployed by `.github/workflows/pages.yml` on every push to `main`. The hosted preview has no server, so AI drafting and Figma/GitHub imports are not available there; editing, the Orbit dashboard example, approvals, exports and the ProdOps Lab (below) all work, and everything is stored in your own browser. The earlier five-stage flow is published beside it at `design.html`.
 
 ## Run it locally
 
@@ -76,9 +76,19 @@ If your network uses a trusted system TLS proxy, start Node with `NODE_USE_SYSTE
 
 This is intended for a trusted single-user environment. The same-origin check is not production authentication, authorization, rate limiting, spending controls or multi-user isolation. Use HTTPS and a protected server for deployment, and consider provider privacy and costs. Manual editing and exports work without a model.
 
+## ProdOps Lab
+
+Open **ProdOps Lab** in the sidebar. Everything in it runs in the browser, so it also works on the static preview. See [docs/GAPS.md](docs/GAPS.md) for why each part exists and what it cannot do.
+
+- **Instant draft** writes labelled template drafts for a step, a role or the whole project from your brief, with no AI model.
+- **Readiness** scores the project for handoff: placeholders behind approvals, contrast, generic palettes and headlines, and a requirement → design → test traceability matrix.
+- **Versions** saves snapshots, compares them with current work, shows which roles must look again, and writes an iteration brief for an agent.
+- **Agent pack** downloads one zip with `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor rules, Copilot instructions, milestone prompts and your specs. Choose web, Expo or both.
+
 ## Checks
 
 ```sh
 npm run build
 npm run test:studio
+npm run test:lab
 ```

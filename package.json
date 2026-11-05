@@ -12,7 +12,7 @@
     "preview:static": "tsx --tsconfig tsconfig.scripts.json scripts/preview-server.ts",
     "qa": "tsx scripts/qa.ts",
     "render-check": "tsx --tsconfig tsconfig.scripts.json scripts/render-check.tsx",
-    "check": "npm run render-check && npm run test && npm run export-check && npm run walkthrough && npm run example-app && npm run smoke && npm run browser-check && npm run qa && npm run build",
+    "check": "npm run render-check && npm run test && npm run test:lab && npm run export-check && npm run walkthrough && npm run example-app && npm run smoke && npm run browser-check && npm run qa && npm run build",
     "smoke": "tsx --tsconfig tsconfig.scripts.json scripts/smoke.tsx",
     "browser-check": "tsx --tsconfig tsconfig.scripts.json scripts/browser-check.ts",
     "export-check": "tsx --tsconfig tsconfig.scripts.json scripts/export-check.ts",
@@ -21,6 +21,7 @@
     "test": "node --import tsx --test scripts/unit.test.ts",
     "kit": "tsx --tsconfig tsconfig.scripts.json scripts/emit-kit.ts",
     "test:assistant": "node --import tsx --test scripts/assistant.test.ts && tsx --tsconfig tsconfig.scripts.json scripts/assistant-smoke.tsx",
+    "test:lab": "node --import tsx --test scripts/lab.test.ts && tsx scripts/lab-smoke.tsx",
     "test:studio": "node --import tsx --test scripts/studio.test.ts && tsx scripts/studio-smoke.tsx"
   },
   "dependencies": {

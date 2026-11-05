@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { assistantPlugin } from './server/assistant'
@@ -7,7 +8,8 @@ export default defineConfig({
   // Relative asset URLs, so the build works from any path (for example a GitHub Pages project site).
   base: './',
   plugins: [react(), assistantPlugin(), studioPlugin()],
-  optimizeDeps: { entries: ['index.html'] },
+  optimizeDeps: { entries: ['index.html', 'design.html'] },
+  build: { rollupOptions: { input: { main: resolve(__dirname, 'index.html'), design: resolve(__dirname, 'design.html') } } },
   server: {
     host: '0.0.0.0',
     port: 5173,

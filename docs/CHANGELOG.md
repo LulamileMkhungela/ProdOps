@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **ProdOps Lab** in the role studio: instant template drafts that work without a server, a handoff readiness score with a traceability matrix, saved versions with an iteration brief, and an agent-agnostic handoff pack. See `docs/GAPS.md`.
+- The five-stage flow is published at `design.html`, with links between the two workspaces.
+- The static preview resolves its assets relative to the site path and never calls a server.
+
 ## [2026.3.0]
 
 - **Five workflow commands** join the fifteen: `/write-spec`, `/create-tasks`,

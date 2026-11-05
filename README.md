@@ -83,6 +83,10 @@ Open **ProdOps Lab** in the sidebar. Everything in it runs in the browser, so it
 - **Instant draft** writes labelled template drafts for a step, a role or the whole project from your brief, with no AI model.
 - **Readiness** scores the project for handoff: placeholders behind approvals, contrast, generic palettes and headlines, and a requirement → design → test traceability matrix.
 - **Versions** saves snapshots, compares them with current work, shows which roles must look again, and writes an iteration brief for an agent.
+- **Standards** discovers conventions from code you choose (read in your browser, never uploaded), asks why for each, keeps an `index.yaml`, supports saved profiles, and injects only the relevant standards into a task by reference or by copy.
+- **Design system** generates a reference page (colours, type, buttons, forms, badges, listings, modal; when to use each, sample markup) and agent rules against design drift.
+- **PRD & milestones** drafts an in-scope / out-of-scope list, then an HTML PRD and numbered milestones, each with a prompt (plan first, build only this, write a log) and a log template.
+- **Decisions** is a written guide to common trade-offs (client or server search, fixed or configurable fields, delete or archive, and more).
 - **Agent pack** downloads one zip with `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor rules, Copilot instructions, milestone prompts and your specs. Choose web, Expo or both.
 
 ## Checks

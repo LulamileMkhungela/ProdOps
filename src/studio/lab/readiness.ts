@@ -119,6 +119,19 @@ export function analyse(project: StudioProject): Report {
       `${testCoverage}% of requirements share vocabulary with quality cases. Heuristic: it checks wording, not intent.`)
   }
 
+  // ---- build plan, standards and design system ------------------------
+  const scopeFile = project.files.find(f => f.path === 'specs/business/requirements/scope.md')
+  if (requirements.length || scopeFile) {
+    const outItems = scopeFile ? (/##\s+Out of scope([\s\S]*?)(?=\n##\s|$)/i.exec(scopeFile.content)?.[1] ?? '').split('\n').filter(l => /^\s*[-*]\s+(?!_)/.test(l) && !/^\s*[-*]\s+>/.test(l)).length : 0
+    add('Build plan', 'scope-out', outItems ? 'pass' : 'warn', 'Out of scope is written down', outItems ? `${outItems} item(s) listed as out of scope.` : 'No out-of-scope list. Agents fill that gap with features nobody asked for. Use PRD & milestones to draft one.')
+  }
+  const standardsCount = project.files.filter(f => f.path.startsWith('specs/development/standards/') && f.path.endsWith('.md')).length
+  add('Build plan', 'standards', standardsCount ? 'pass' : 'warn', 'Standards are written down', standardsCount ? `${standardsCount} standard(s), indexed for agents.` : 'No standards yet. Agents will rediscover your conventions every session.')
+  if (project.files.some(f => f.path === 'design/design-tokens.json')) {
+    const hasSystem = project.files.some(f => f.path === 'design/design-system.md')
+    add('Build plan', 'design-system', hasSystem ? 'pass' : 'warn', 'Design system is documented', hasSystem ? 'A design-system reference and agent rules are in the project.' : 'Tokens exist but there is no component reference, so screens can drift apart. Generate it under Design system.')
+  }
+
   // ---- design tokens and distinctiveness -------------------------------
   const tokenFile = project.files.find(f => f.path === 'design/design-tokens.json')
   let tokens: Record<string, unknown> | null = null

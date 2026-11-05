@@ -1,4 +1,4 @@
-import { applyGenerated, type FileItem, type StudioProject } from '../model'
+import { applyGenerated, roleOf, type FileItem, type StudioProject } from '../model'
 import type { Role } from '../workflows'
 
 /** Adds drafted files for the given steps, one role at a time, and marks those steps in progress. */
@@ -23,4 +23,16 @@ export function applyDrafts(project: StudioProject, drafts: { role: Role; stepId
     next = { ...next, stepDecisions: decisions }
   }
   return { project: next, written, kept }
+}
+
+/** Adds or replaces files of any roles, one role at a time, keeping the stale flags honest. */
+export function upsertFiles(project: StudioProject, files: FileItem[]): StudioProject {
+  let next = project
+  for (const role of [...new Set(files.map(f => roleOfPath(f.path)))]) next = applyGenerated(next, role, files.filter(f => roleOfPath(f.path) === role))
+  return next
+}
+function roleOfPath(path: string): Role {
+  const r = roleOf(path)
+  if (!r) throw new Error(`Not a project path: ${path}`)
+  return r
 }

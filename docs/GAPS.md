@@ -13,6 +13,18 @@ A comparison with the Design OS workflow shown in its public demo (vision → ro
 | Mobile only appears as a request. | The pack has an **Expo / React Native** target that changes the rules and prompts (tokens as a theme object, touch targets, navigation). | `agentpack.ts` | Prompt tailoring only. |
 | Needs a model and a subscription to get started. | **Instant draft** works with no model, no server and no network. | Lab → Instant draft · `offline.ts` | Template output. Archetype detection is crude, so a pattern picker is provided; every file says it is a template draft. |
 
+## Standards, design systems and build plans
+
+| Practice | What ProdOps does | Limit |
+| --- | --- | --- |
+| Surface the conventions an agent cannot guess, and capture the reasoning | **Standards → Discover** reads code you choose and proposes candidates (file naming, tokens vs raw colours, shared libraries, repeated idioms, test layout), then asks why for each. | Text analysis only. It finds what repeats; the reason comes from you. It does not run an agent or interview you adaptively. |
+| Keep standards short and load only what applies | One-line descriptions in `index.yaml`; **Inject** picks standards by task wording, by reference (single source of truth) or by copy. | Selection is keyword overlap between the task and the descriptions. |
+| Different standards per project type | **Profiles**: three starters plus ones you save from a project (kept in this browser). | Not synced between devices. |
+| Stop design drift | **Design system** page from your tokens, with when-to-use, when-not-to-use and sample markup, plus rules in `AGENTS.md`. | Documents component shapes; generates no component code. Rules are followed most of the time, not always. |
+| Say what is out of scope | **PRD & milestones** drafts In / Out lists; readiness warns if Out is empty. | The out-of-scope suggestions are generic until you edit them. |
+| Buildable milestones with a log that passes the baton | Each milestone has a prompt (plan first, read PRD and earlier logs, build only this, write the log) and a log template. | Order follows your list with a keyword-based dependency nudge. |
+| Understand the question you are asked | **Decisions** explains 12 common trade-offs with a default for a small first version. | A written guide, not a model; it cannot answer anything outside it. |
+
 ## What ProdOps was missing
 
 | Gap | Resolution |

@@ -76,12 +76,47 @@ try {
   await click('Download iteration brief', lab())
   assert.ok(exported && (await exported.text()).includes('loyalty points'))
 
+  // Standards: add by hand, discover from pasted code, apply a profile
+  await click('Standards', lab())
+  await type(lab().querySelector('#std-name'), 'Plan before code')
+  await type(lab().querySelector('#std-desc'), 'Plan each milestone before writing code.')
+  await type(lab().querySelector('#std-body'), 'Start in plan mode.')
+  await click('Save standard', lab())
+  assert.match(lab().textContent!, /Your standards \(1\)/)
+  const repeated = 'const reply = { ok: false, error: message }'
+  await type(lab().querySelector('textarea[aria-label="Paste code"]'), ['a-b.tsx', 'c-d.tsx', 'e-f.tsx'].map(n => `// file: ${n}\nimport { Icon } from 'lucide-react'\n${repeated}\n`).join('\n'))
+  await click('Find patterns', lab())
+  assert.ok(lab().querySelectorAll('.lab-card').length >= 1, 'patterns are proposed with a question')
+  await click('Write this standard', lab())
+  assert.match(lab().textContent!, /Your standards \(2\)/)
+  const profile = lab().querySelector('#profile') as HTMLSelectElement
+  assert.ok(profile.options.length >= 3)
+  await click('Apply to this project', lab())
+  assert.match(lab().textContent!, /Design system first/)
+  await type(lab().querySelector('textarea[aria-label="Task"]'), 'Tweak the colours on the pricing page')
+  assert.match((lab().querySelector('textarea[aria-label="Prompt with standards"]') as HTMLTextAreaElement).value, /standards\/(tokens-not-raw-values|design-system-first)/)
+
+  // Design system, scope and milestones, decisions
+  await click('Design system', lab())
+  assert.ok(lab().querySelector('iframe[title="Design system preview"]'))
+  await click('Add to project', lab())
+  assert.match(win.localStorage.getItem('prodops.role-studio.projects.v2') ?? '', /design-system\.md/)
+  await click('PRD & milestones', lab())
+  await click('Draft scope from requirements', lab())
+  assert.ok(lab().querySelectorAll('.lab-version').length >= 3, 'milestones are listed')
+  assert.match(lab().textContent!, /Foundation/)
+  await click('Download PRD (HTML)', lab())
+  assert.match(await exported!.text(), /Out of scope/)
+  await click('Decisions', lab())
+  await type(lab().querySelector('input[aria-label="Describe the question"]'), 'Should search be server side or client side?')
+  assert.match(lab().textContent!, /For a small first version/)
+
   // Agent pack
   await click('Agent pack', lab())
   await click('Download agent pack', lab())
   await tick(200)
   const zip = await JSZip.loadAsync(await exported!.arrayBuffer())
-  for (const name of ['AGENTS.md', 'CLAUDE.md', 'GEMINI.md', '.cursor/rules/prodops.mdc', 'prompts/iterate.md']) assert.ok(zip.file(name), name)
+  for (const name of ['AGENTS.md', 'CLAUDE.md', 'GEMINI.md', '.cursor/rules/prodops.mdc', 'prompts/iterate.md', 'build-plan/prd.html', 'design/design-system.md', 'specs/development/standards/index.yaml']) assert.ok(zip.file(name), name)
   assert.deepEqual(requests, [], 'the Lab made no network requests')
   console.log('Lab smoke passed: readiness, instant draft, versions, iteration brief and agent pack, with no network.')
 } finally { await act(async () => root.unmount()); await vite.close(); globalThis.fetch = oldFetch }

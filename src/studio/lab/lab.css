@@ -34,3 +34,11 @@
 .lab-lines{max-height:240px;overflow:auto;background:#faf8f6;border:1px solid #eee7e1;border-radius:6px;padding:8px;font-size:11px;white-space:pre-wrap;margin:4px 0 8px}
 .lab-lines .add{color:#26704d}.lab-lines .del{color:#a2402f}
 .lab-list{padding-left:18px;line-height:1.8}
+.lab-tabs{overflow-x:auto;scrollbar-width:thin}.lab-tabs button{white-space:nowrap}
+.lab-input,.lab-text{width:100%;padding:10px;border:1px solid #eae5e1;border-radius:7px;background:#fff;font:inherit;font-size:12px;margin:4px 0}
+.lab-text{resize:vertical}
+.lab-card{border:1px solid #eee7e1;border-radius:8px;padding:10px 12px;margin:8px 0}.lab-card ul{margin:6px 0 8px;padding-left:18px}
+.lab-chips{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0}.lab-pane .check{display:flex;gap:6px;align-items:center;font-weight:400;margin:4px 0}
+.lab-frame{width:100%;height:340px;border:1px solid #eee7e1;border-radius:8px;background:#fff;margin:8px 0}
+.lab-link{border:0;background:none;padding:0;text-align:left;font-size:12.5px;color:#483931;cursor:pointer}
+.lab-pick{background:#eef7f1;border-radius:6px;padding:8px 10px}

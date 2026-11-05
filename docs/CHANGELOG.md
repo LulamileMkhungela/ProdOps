@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Lab: **Standards** (discover, index, inject, profiles), **Design system** page with anti-drift rules, **PRD & milestones** with scope lists, prompts and logs, and a **Decisions** guide. The agent pack now carries all of them and replaces the generic milestone prompts with the plan.
+- Readiness gained checks for out-of-scope, standards and design-system documentation.
+
 - **ProdOps Lab** in the role studio: instant template drafts that work without a server, a handoff readiness score with a traceability matrix, saved versions with an iteration brief, and an agent-agnostic handoff pack. See `docs/GAPS.md`.
 - The five-stage flow is published at `design.html`, with links between the two workspaces.
 - The static preview resolves its assets relative to the site path and never calls a server.

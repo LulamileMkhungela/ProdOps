@@ -9,6 +9,9 @@ import JSZip from 'jszip'
 import { workflows, type Role } from '../workflows'
 import { roleOf, type StudioProject } from '../model'
 import { analyse, reportMarkdown, traceabilityMarkdown } from './readiness'
+import { designRules, designSystemFiles } from './designsystem'
+import { buildPlanFiles } from './prd'
+import { INDEX_PATH, indexYaml, injectMarkdown, listStandards } from './standards'
 
 export type Platform = 'web' | 'mobile' | 'both'
 export const PLATFORMS: { id: Platform; label: string }[] = [
@@ -26,6 +29,8 @@ const platformRules = (platform: Platform) => platform === 'web'
     : ['Share the data layer and business rules between a React web app and an Expo / React Native app.', 'Keep screens separate per platform; map tokens to CSS variables on web and a theme object on mobile.', 'Touch targets 44pt on mobile; responsive layout on web.']
 
 export function agentsMarkdown(project: StudioProject, platform: Platform): string {
+  const standards = listStandards(project)
+  const hasDesign = project.files.some(f => f.path === 'design/design-tokens.json' || f.path === 'design/design-system.md')
   const approved = Object.entries(project.stepDecisions).filter(([, d]) => d.status === 'approved').map(([k]) => k)
   return `# ${project.name} — instructions for coding agents
 
@@ -49,7 +54,10 @@ Approved steps: ${approved.length ? approved.join(', ') : 'none yet — treat al
 - Use the named design tokens; do not hard-code colours, sizes or fonts.
 - Keep \`READINESS.md\` and \`TRACEABILITY.md\` in mind: every requirement should end up with a screen and a test.
 
-## Target platform
+## When something is unclear
+Ask, and explain the trade-offs of each option in plain language (cost, risk, what it rules out) before recommending one. Typical questions: where search and sorting happen, whether fields are fixed or configurable, who can see what, whether deleted things are kept.
+
+${hasDesign ? designRules(platform) + '\n' : ''}${standards.length ? injectMarkdown(standards, 'reference').replace('## Standards to follow', `## Standards to follow\n\nThe index is \`${INDEX_PATH}\`: read it first, and open a standard only when its description fits the task.`) + '\n' : ''}## Target platform
 ${platformRules(platform).map(r => `- ${r}`).join('\n')}
 
 ## Definition of done
@@ -92,6 +100,14 @@ export async function buildAgentPack(project: StudioProject, options: PackOption
   zip.file('READINESS.md', reportMarkdown(project, report))
   zip.file('TRACEABILITY.md', traceabilityMarkdown(project, report))
 
+  const present = new Set(project.files.map(f => f.path))
+  for (const f of designSystemFiles(project, platform)) if (project.files.some(x => x.path === 'design/design-tokens.json') && !present.has(f.path)) zip.file(f.path, f.content)
+  const standards = listStandards(project)
+  if (standards.length) zip.file(INDEX_PATH, indexYaml(standards))
+  const { plan, files: planFiles } = buildPlanFiles(project, platform)
+  for (const f of planFiles) zip.file(f.path, f.content)
+  zip.file('prompts/inject-standards.md', `# Inject standards into any task\n\nRead \`${INDEX_PATH}\`${standards.length ? '' : ' (none written yet)'}. Choose the standards whose descriptions fit the task and read only those. Reference them by path in any spec, prompt or skill you write, so they stay the single source of truth; copy their text only when the output must stand alone.\n`)
+
   for (const file of project.files) zip.file(file.path.startsWith('specs/') || file.path.startsWith('design/') ? file.path : `specs-extra/${file.path}`, file.content)
 
   const devSteps = workflows.development.filter(step => project.files.some(f => f.path.startsWith(`specs/development/${step.id}/`)))
@@ -99,12 +115,13 @@ export async function buildAgentPack(project: StudioProject, options: PackOption
     { label: 'Foundation — tokens, shell and routing', folder: 'specs/design/' },
     ...devSteps.filter(s => ['specification', 'database', 'tasks'].includes(s.id)).map(s => ({ label: s.label, folder: `specs/development/${s.id}/` })),
   ]
-  milestones.forEach((m, i) => zip.file(`prompts/${String(i + 1).padStart(2, '0')}-${slug(m.label)}.md`, milestonePrompt(project, platform, i + 1, m.label, m.folder)))
+  if (!plan.milestones.length) milestones.forEach((m, i) => zip.file(`prompts/${String(i + 1).padStart(2, '0')}-${slug(m.label)}.md`, milestonePrompt(project, platform, i + 1, m.label, m.folder)))
   zip.file('prompts/one-shot.md', `# One-shot build\n\nRead \`AGENTS.md\`, \`brief.md\` and everything under \`specs/\`. In plan mode, list your questions about data, authentication and anything the specs leave open. After answers, build the whole product milestone by milestone, writing tests first. Report gaps at the end.\n`)
   zip.file('prompts/iterate.md', `# Iterate on an existing build\n\nRead \`AGENTS.md\` and the attached iteration brief. Apply **only** the listed changes. Update tests with the code. List any unchanged spec that now conflicts, and ask before changing data models or public interfaces.\n`)
   zip.file('prompts/review.md', `# Review against the specs\n\nCompare the implementation with \`specs/\`. For each requirement in \`TRACEABILITY.md\`, say whether it is built, tested, or missing. Do not fix anything yet; produce a list.\n`)
 
   const roles = [...new Set(project.files.map(f => roleOf(f.path)).filter(Boolean))] as Role[]
-  zip.file('README.md', `# ${project.name} — handoff pack\n\nGenerated ${(options.now ?? new Date()).toISOString().slice(0, 10)} by ProdOps.\n\n- \`AGENTS.md\`, \`CLAUDE.md\`, \`GEMINI.md\`, \`.cursor/rules/\`, \`.github/copilot-instructions.md\` — the same instructions for each tool\n- \`brief.md\`, \`specs/\`, \`design/\` — what to build (${roles.join(', ') || 'no roles yet'})\n- \`prompts/\` — ${milestones.length} milestone prompt(s), one-shot, iterate and review\n- \`READINESS.md\`, \`TRACEABILITY.md\` — how ready the specs are (score ${report.score}/100)\n\nThis pack contains instructions. It does not run an agent, and generated specs need human review.\n`)
+  zip.file('README.md', `# ${project.name} — handoff pack\n\nGenerated ${(options.now ?? new Date()).toISOString().slice(0, 10)} by ProdOps.\n\n- \`AGENTS.md\`, \`CLAUDE.md\`, \`GEMINI.md\`, \`.cursor/rules/\`, \`.github/copilot-instructions.md\` — the same instructions for each tool\n- \`brief.md\`, \`specs/\`, \`design/\` — what to build (${roles.join(', ') || 'no roles yet'})\n- \`build-plan/\` — ${plan.milestones.length ? `the PRD (html and md) and ${plan.milestones.length} milestones, each with a prompt and a log template` : 'not generated: no requirements or scope were found'}
+- \`prompts/\` — ${plan.milestones.length ? '' : `${milestones.length} milestone prompt(s), `}one-shot, iterate, review and inject-standards\n- \`READINESS.md\`, \`TRACEABILITY.md\` — how ready the specs are (score ${report.score}/100)\n\nThis pack contains instructions. It does not run an agent, and generated specs need human review.\n`)
   return zip
 }

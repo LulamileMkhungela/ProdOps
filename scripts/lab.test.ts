@@ -10,6 +10,11 @@ import { compileBrief, draftFiles, DRAFT_NOTE } from '../src/studio/lab/offline'
 import { buildAgentPack } from '../src/studio/lab/agentpack'
 import { applyDrafts } from '../src/studio/lab/apply'
 import { contrast } from '../src/studio/lab/color'
+import { candidateToStandard, discoverPatterns, splitPasted, indexYaml, injectMarkdown, listStandards, loadProfiles, makeProfile, parseStandard, saveProfiles, standardFile, STARTER_PROFILES, suggestStandards, withStandards, PROFILES_KEY, type Standard } from '../src/studio/lab/standards'
+import { designSystemFiles, designSystemHtml, readTokens } from '../src/studio/lab/designsystem'
+import { buildPlan, buildPlanFiles, orderFeatures, parseScope, scopeDraft, SCOPE_PATH } from '../src/studio/lab/prd'
+import { matchTradeoffs, TRADEOFFS } from '../src/studio/lab/tradeoffs'
+import { upsertFiles } from '../src/studio/lab/apply'
 
 const BRIEF = 'A booking app for township barbershops where customers reserve slots, pay a deposit and get reminders. Owners see the day at a glance and no-shows drop.'
 const project = (): StudioProject => ({ ...freshProject(), name: 'Cut Queue', spec: BRIEF })
@@ -162,9 +167,182 @@ test('the agent pack carries the same instructions for every tool, the specs and
 })
 
 test('the lab and the offline draft make no network calls and name no third party', async () => {
-  const sources = await Promise.all(['Lab.tsx', 'offline.ts', 'readiness.ts', 'versions.ts', 'agentpack.ts'].map(f => import('node:fs/promises').then(fs => fs.readFile(`src/studio/lab/${f}`, 'utf8'))))
+  const sources = await Promise.all(['Lab.tsx', 'Standards.tsx', 'Build.tsx', 'offline.ts', 'readiness.ts', 'versions.ts', 'agentpack.ts', 'standards.ts', 'designsystem.ts', 'prd.ts', 'tradeoffs.ts'].map(f => import('node:fs/promises').then(fs => fs.readFile(`src/studio/lab/${f}`, 'utf8'))))
   for (const text of sources) {
     assert.doesNotMatch(text, /\bfetch\(|XMLHttpRequest|https?:\/\//)
     assert.doesNotMatch(text, new RegExp(['build' + 'er\\s?meth' + 'ods', 'brian ' + 'casel'].join('|'), 'i'))
   }
+})
+
+// ---- standards -----------------------------------------------------------
+const STD: Standard = { slug: 'api-shape', name: 'API "responses" shape', description: 'Every endpoint returns { data, error }: never a bare array.', body: '# Shape\n\nReturn `{ data, error }`.\n\n## Why\n\nClients branch on one shape.' }
+
+test('a standard round-trips through its file, even with quotes, and the index has one line each', () => {
+  const file = standardFile(STD)
+  assert.ok(isSafeFile(file))
+  assert.deepEqual(parseStandard(file), STD)
+  const p = upsertFiles(project(), [file])
+  assert.equal(listStandards(p).length, 1)
+  const yaml = indexYaml(listStandards(p))
+  assert.match(yaml, /file: "api-shape.md"/)
+  assert.match(yaml, /description: "Every endpoint returns/)
+  assert.equal(indexYaml([]).includes('standards: []'), true)
+  const { files, remove } = withStandards(p, [], ['api-shape'])
+  assert.deepEqual(remove, ['specs/development/standards/api-shape.md'])
+  assert.doesNotMatch(files[0].content, /api-shape/)
+})
+
+test('standards are suggested by task and injected by reference or by copy', () => {
+  const colours: Standard = { slug: 'colour-tokens', name: 'Colour tokens', description: 'Use named colour variables, never raw hex values.', body: 'Use variables.' }
+  assert.deepEqual(suggestStandards('tweak the brand colours on the pricing page', [STD, colours]).map(s => s.slug), ['colour-tokens'])
+  assert.deepEqual(suggestStandards('unrelated words here', [STD, colours]), [])
+  const ref = injectMarkdown([colours], 'reference')
+  assert.match(ref, /@specs\/development\/standards\/colour-tokens.md/)
+  assert.doesNotMatch(ref, /Use variables\./)
+  assert.match(injectMarkdown([colours], 'copy'), /Use variables\./)
+  assert.equal(injectMarkdown([], 'copy'), '')
+})
+
+test('discovery finds repeating conventions, and nothing in noise', () => {
+  const src = (name: string, text: string) => ({ name, text })
+  const line = 'const response = { ok: false, error: message }'
+  const sources = [
+    src('src/user-card.tsx', `import { Icon } from 'lucide-react'\nimport x from 'zod'\n${line}\ncolor: var(--color-primary); border: var(--color-line); background: var(--color-bg)`),
+    src('src/deal-list.tsx', `import { Icon } from 'lucide-react'\nimport x from 'zod'\n${line}`),
+    src('src/task-board.tsx', `import { Icon } from 'lucide-react'\nimport x from 'zod'\n${line}`),
+    src('src/task-board.test.tsx', 'it("works", () => {})'),
+    src('src/deal-list.test.tsx', 'it("works", () => {})'),
+  ]
+  const ids = discoverPatterns(sources).map(c => c.id)
+  for (const id of ['file-naming', 'colour-tokens', 'libraries', 'idioms', 'tests']) assert.ok(ids.includes(id), id)
+  const c = discoverPatterns(sources).find(x => x.id === 'file-naming')!
+  assert.match(c.title, /kebab-case/)
+  assert.match(candidateToStandard(c, 'Greppable on every OS').body, /## Why\n\nGreppable/)
+  assert.match(candidateToStandard(c, '').body, /Add the reason/)
+  assert.ok(isSafeFile(standardFile(candidateToStandard(c, ''))))
+  assert.deepEqual(discoverPatterns([{ name: 'a.txt', text: 'hello' }]), [])
+  assert.deepEqual(discoverPatterns([]), [])
+})
+
+test('pasted code is split into files by marker lines', () => {
+  const files = splitPasted('// file: a-b.tsx\nconst a = 1\n# file: c.rb\nputs 1\n/* file: d.css */\nbody{}')
+  assert.deepEqual(files.map(f => f.name), ['a-b.tsx', 'c.rb', 'd.css'])
+  assert.deepEqual(splitPasted('just text').map(f => f.name), ['pasted.txt'])
+  assert.deepEqual(splitPasted('   '), [])
+})
+
+test('profiles persist (without the built-in ones) and starter profiles are valid files', () => {
+  const storage = memory()
+  const saved = makeProfile('Mine', [STD])
+  saveProfiles(storage, [saved, ...STARTER_PROFILES])
+  assert.deepEqual(loadProfiles(storage).map(p => p.name), ['Mine'])
+  assert.deepEqual(loadProfiles({ getItem: () => '[{"broken":1}]' }), [])
+  assert.equal(storage.getItem(PROFILES_KEY) !== null, true)
+  for (const profile of STARTER_PROFILES) for (const standard of profile.standards) { assert.ok(isSafeFile(standardFile(standard))); assert.ok(standard.body.includes('## Why')) }
+})
+
+// ---- design system -------------------------------------------------------
+test('the design system page is built from the tokens, escapes content and passes its own contrast rule', () => {
+  const tokens = { primary: '#a3401f', background: '#fffaf5', text: '#201a17', radius: 6, heading: '<script>alert(1)</script> Book your chair', button: 'Book', colors: { sand: '#e8d8c4', 'bad name!': '#123456', also: 'red' } }
+  const p = { ...project(), files: [{ path: 'design/design-tokens.json', content: JSON.stringify(tokens) }] }
+  const html = designSystemHtml(p)
+  assert.match(html, /--color-primary:#a3401f/)
+  assert.match(html, /--radius:6px/)
+  assert.match(html, /--color-sand:#e8d8c4/)
+  assert.doesNotMatch(html, /<script>alert/)
+  assert.doesNotMatch(html, /bad name|also/)
+  for (const part of ['Buttons', 'Form fields', 'Badges', 'Listings', 'Modal', 'Use when', 'Do not use when']) assert.ok(html.includes(part), part)
+  const files = designSystemFiles(p, 'mobile')
+  assert.deepEqual(files.map(f => f.path), ['design/design-system.html', 'design/design-system.md', 'design/design-rules.md'])
+  assert.ok(files.every(isSafeFile))
+  assert.match(files[1].content, /raw hex value/)
+  assert.match(files[1].content, /theme object/)
+  assert.deepEqual(readTokens({ ...project(), files: [{ path: 'design/design-tokens.json', content: '{broken' }] }).primary, readTokens(project()).primary)
+})
+
+// ---- scope, PRD, milestones ----------------------------------------------
+const withRequirements = (lines: string[]): StudioProject => ({ ...project(), files: [{ path: 'specs/business/requirements/functional-requirements.md', content: '# FR\n\n' + lines.map((l, i) => `${i + 1}. ${l}`).join('\n') }] })
+const CRM = ['Kanban board: drag deals across the pipeline stages', 'Deals: track a value and a status for every deal', 'Contacts: store names, companies and emails for each person', 'Follow-ups: a to-do list that reminds you of the next action on every deal']
+
+test('scope is drafted from requirements, parsed back, and survives edits', () => {
+  const p = withRequirements(CRM)
+  const draft = scopeDraft(p)
+  assert.match(draft, /## In scope/)
+  assert.match(draft, /## Out of scope/)
+  const scope = parseScope(draft)
+  assert.equal(scope.inScope.length, 4)
+  assert.ok(scope.outScope.length >= 4)
+  assert.equal(scope.features.length, 4)
+  assert.equal(scope.features[0].inScope.length, 1)
+  assert.equal(scope.features[0].outScope.length, 0, 'placeholder out-lines are not content')
+  const edited = parseScope(draft.replace('- Out: _What this feature will not do in version one._', '- Out: no swim-lanes'))
+  assert.deepEqual(edited.features[0].outScope, ['no swim-lanes'])
+})
+
+test('milestones come after what they depend on, and the plan is honest about gaps', () => {
+  const p = withRequirements(CRM)
+  const plan = buildPlan(p)
+  assert.equal(plan.source, 'requirements')
+  assert.ok(plan.notes.some(n => /out of scope/i.test(n)))
+  const titles = plan.milestones.map(m => m.title)
+  assert.equal(titles[0], 'Foundation')
+  assert.equal(titles.at(-1), 'Verify and hand off')
+  assert.ok(titles.findIndex(t => /Deals/.test(t)) < titles.findIndex(t => /Kanban/.test(t)), titles.join(' | '))
+  assert.ok(plan.milestones.every((m, i) => i === 0 || m.dependsOn.length > 0))
+  assert.equal(buildPlan(project()).source, 'none')
+  assert.deepEqual(buildPlanFiles(project(), 'web').files, [])
+  const cyc = [{ name: 'Alpha thing', text: 'Alpha thing uses beta', inScope: [], outScope: [] }, { name: 'Beta thing', text: 'Beta thing uses alpha', inScope: [], outScope: [] }]
+  assert.deepEqual(orderFeatures(cyc).map(f => f.name), ['Alpha thing', 'Beta thing'])
+})
+
+test('milestone files tell the agent to plan first, stay in scope and write a log', () => {
+  const p = upsertFiles(withRequirements(CRM), [{ path: SCOPE_PATH, content: scopeDraft(withRequirements(CRM)) }, standardFile({ slug: 'plan', name: 'Plan before code', description: 'Plan each milestone before writing code for the deals.', body: 'Plan first.' })])
+  const { plan, files } = buildPlanFiles(p, 'mobile')
+  assert.equal(plan.source, 'scope')
+  assert.equal(plan.notes.length, 0)
+  const paths = files.map(f => f.path)
+  assert.ok(paths.includes('build-plan/prd.html') && paths.includes('build-plan/prd.md'))
+  assert.equal(paths.filter(x => x.endsWith('/prompt.md')).length, plan.milestones.length)
+  assert.equal(paths.filter(x => x.endsWith('/milestone-log.md')).length, plan.milestones.length)
+  const second = files.find(f => f.path.includes('/02-') && f.path.endsWith('prompt.md'))!.content
+  assert.match(second, /Enter plan mode first/)
+  assert.match(second, /milestone-log\.md/)
+  assert.match(second, /Do not build/)
+  assert.match(second, /Expo/)
+  assert.match(second, /@specs\/development\/standards\/plan\.md/)
+  assert.match(files.find(f => f.path.includes('/01-') && f.path.endsWith('milestone-log.md'))!.content, /What is new \(plain language\)/)
+  const html = files.find(f => f.path === 'build-plan/prd.html')!.content
+  assert.match(html, /Out of scope/)
+  assert.doesNotMatch(buildPlanFiles({ ...p, name: '<img onerror=x>' }, 'web').files[0].content, /<img onerror/)
+})
+
+// ---- decisions -----------------------------------------------------------
+test('the decision guide answers the question that was asked', () => {
+  assert.equal(matchTradeoffs('Should search be server side or client side?')[0].id, 'search-where')
+  assert.equal(matchTradeoffs('do we need custom fields or hardcoded stages')[0].id, 'custom-fields')
+  assert.deepEqual(matchTradeoffs('zzz qqq'), [])
+  for (const t of TRADEOFFS) { assert.ok(t.options.length >= 2 && t.defaultFor.length > 20, t.id) }
+  assert.equal(new Set(TRADEOFFS.map(t => t.id)).size, TRADEOFFS.length)
+})
+
+test('the pack carries standards, design system, PRD and milestones, and drops the generic prompts when a plan exists', async () => {
+  const base = withRequirements(CRM)
+  const p = upsertFiles(base, [
+    { path: 'design/design-tokens.json', content: JSON.stringify({ primary: '#a3401f', background: '#fffaf5', text: '#201a17', radius: 6, heading: 'Book your chair', button: 'Book' }) },
+    standardFile(STD),
+  ])
+  const zip = await buildAgentPack(p, { platform: 'web' })
+  const names = Object.keys(zip.files)
+  for (const must of ['build-plan/prd.html', 'build-plan/prd.md', 'design/design-system.html', 'design/design-system.md', 'specs/development/standards/index.yaml', 'prompts/inject-standards.md']) assert.ok(names.includes(must), must)
+  assert.ok(names.some(n => /^build-plan\/milestones\/02-.*\/prompt\.md$/.test(n)))
+  assert.ok(!names.some(n => /^prompts\/\d\d-/.test(n)), 'generic numbered prompts are replaced by the plan')
+  const agents = await zip.file('AGENTS.md')!.async('string')
+  assert.match(agents, /Design system rules/)
+  assert.match(agents, /Never write a raw hex value/)
+  assert.match(agents, /Standards to follow/)
+  assert.match(agents, /explain the trade-offs/)
+  assert.match(await zip.file('README.md')!.async('string'), /build-plan/)
+  const bare = await buildAgentPack(project(), { platform: 'web' })
+  assert.ok(!Object.keys(bare.files).some(n => n.startsWith('build-plan/')))
+  assert.doesNotMatch(await bare.file('AGENTS.md')!.async('string'), /Standards to follow/)
 })

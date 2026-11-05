@@ -8,9 +8,11 @@ import { workflows, type Role } from '../workflows'
 import { analyse, reportMarkdown, traceabilityMarkdown, type Level } from './readiness'
 import { compare, iterationBrief, impact, loadVersions, saveVersions, takeSnapshot, type Snapshot } from './versions'
 import { buildAgentPack, PLATFORMS, type Platform } from './agentpack'
+import { Standards } from './Standards'
+import { BuildPlan, Decisions, DesignSystem } from './Build'
 import { compileBrief, draftFiles, patterns, type Pattern } from './offline'
 
-export type LabTab = 'draft' | 'readiness' | 'versions' | 'pack'
+export type LabTab = 'draft' | 'readiness' | 'versions' | 'standards' | 'design' | 'plan' | 'decisions' | 'pack'
 interface Props {
   project: StudioProject
   setProject: Dispatch<SetStateAction<StudioProject>>
@@ -36,6 +38,9 @@ export function Lab({ project, setProject, projectId, role, stepId, initialTab =
   const [tab, setTab] = useState<LabTab>(initialTab)
   const report = useMemo(() => analyse(project), [project])
   const stepLabel = workflows[role].find(s => s.id === stepId)?.label ?? stepId
+
+  const [platform, setPlatform] = useState<Platform>('web')
+  const shared = { project, setProject, notify, save: saveText, platform }
 
   // ---- draft -----------------------------------------------------------
   const [options, setOptions] = useState<Pattern[]>([])
@@ -78,7 +83,6 @@ export function Lab({ project, setProject, projectId, role, stepId, initialTab =
   }
 
   // ---- pack ------------------------------------------------------------
-  const [platform, setPlatform] = useState<Platform>('web')
   async function pack() {
     try {
       const zip = await buildAgentPack(project, { platform })
@@ -87,7 +91,7 @@ export function Lab({ project, setProject, projectId, role, stepId, initialTab =
     } catch { notify('Could not create the agent pack.') }
   }
 
-  const tabs: { id: LabTab; label: string }[] = [{ id: 'draft', label: 'Instant draft' }, { id: 'readiness', label: 'Readiness' }, { id: 'versions', label: 'Versions' }, { id: 'pack', label: 'Agent pack' }]
+  const tabs: { id: LabTab; label: string }[] = [{ id: 'draft', label: 'Instant draft' }, { id: 'readiness', label: 'Readiness' }, { id: 'versions', label: 'Versions' }, { id: 'standards', label: 'Standards' }, { id: 'design', label: 'Design system' }, { id: 'plan', label: 'PRD & milestones' }, { id: 'decisions', label: 'Decisions' }, { id: 'pack', label: 'Agent pack' }]
   const groups = [...new Set(report.checks.map(c => c.group))]
 
   return <div className="modal-backdrop" onClick={onClose}><section className="studio-modal lab-modal" role="dialog" aria-modal="true" aria-labelledby="lab-title" onClick={e => e.stopPropagation()}>
@@ -139,11 +143,16 @@ export function Lab({ project, setProject, projectId, role, stepId, initialTab =
       </>}
     </div>}
 
+    {tab === 'standards' && <Standards project={project} setProject={setProject} notify={notify} save={saveText} />}
+    {tab === 'design' && <DesignSystem {...shared} />}
+    {tab === 'plan' && <BuildPlan {...shared} />}
+    {tab === 'decisions' && <Decisions />}
+
     {tab === 'pack' && <div className="lab-pane">
       <p>One download that works in <b>Claude Code, Codex, Cursor, Gemini CLI and Copilot</b>: the same instructions in each tool’s own file, your specs, milestone prompts, and the readiness and traceability reports.</p>
       <label htmlFor="lab-platform">Target</label>
       <select id="lab-platform" value={platform} onChange={e => setPlatform(e.target.value as Platform)}>{PLATFORMS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
-      <ul className="lab-list"><li><code>AGENTS.md</code>, <code>CLAUDE.md</code>, <code>GEMINI.md</code>, <code>.cursor/rules</code>, <code>.github/copilot-instructions.md</code></li><li><code>prompts/</code> — milestones, one-shot, iterate, review</li><li><code>specs/</code>, <code>design/</code>, <code>brief.md</code>, <code>READINESS.md</code>, <code>TRACEABILITY.md</code></li></ul>
+      <ul className="lab-list"><li><code>AGENTS.md</code>, <code>CLAUDE.md</code>, <code>GEMINI.md</code>, <code>.cursor/rules</code>, <code>.github/copilot-instructions.md</code></li><li><code>build-plan/</code> — PRD and milestones, each with a prompt and a log template</li><li><code>prompts/</code> — one-shot, iterate, review, inject standards</li><li><code>specs/</code>, your standards and their index, <code>design/</code> with the design-system page, <code>brief.md</code>, <code>READINESS.md</code>, <code>TRACEABILITY.md</code></li></ul>
       <div className="lab-actions"><button className="button accent" onClick={() => void pack()}>Download agent pack</button></div>
       <p className="lab-fine">The pack contains instructions only. It does not run an agent, and any “Local template draft” inside it still needs human review.</p>
     </div>}

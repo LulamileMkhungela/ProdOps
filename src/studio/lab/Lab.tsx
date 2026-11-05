@@ -13,6 +13,8 @@ import { journey, type Tab } from './journey'
 import { buildPlanFiles } from './prd'
 import { Standards } from './Standards'
 import { BuildPlan, Decisions, DesignSystem } from './Build'
+import { Skills } from './Skills'
+import { loadInstallFiles } from '../skills'
 
 export type LabTab = Tab
 interface Props {
@@ -114,7 +116,7 @@ export function Lab({ project, setProject, projectId, role, stepId, initialTab =
   const plan = useMemo(() => buildPlanFiles(project, platform).plan, [project, platform])
   async function pack() {
     try {
-      const zip = await buildAgentPack(project, { platform })
+      const zip = await buildAgentPack(project, { platform, installFiles: await loadInstallFiles() })
       download(await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }), `${slug(project.name)}-agent-pack.zip`)
       markPacked(projectId); setPacked(true)
       notify('Agent pack downloaded. The steps below say what to do with it.')
@@ -126,7 +128,7 @@ export function Lab({ project, setProject, projectId, role, stepId, initialTab =
     { id: 'draft', label: 'Draft specs', n: '2' }, { id: 'standards', label: 'Standards', n: '4' }, { id: 'design', label: 'Design system', n: '5' },
     { id: 'plan', label: 'Scope & milestones', n: '6' }, { id: 'readiness', label: 'Readiness', n: '7' }, { id: 'pack', label: 'Hand off', n: '8' },
   ]
-  const tools: { id: LabTab; label: string }[] = [{ id: 'versions', label: 'Versions' }, { id: 'decisions', label: 'Decisions guide' }]
+  const tools: { id: LabTab; label: string }[] = [{ id: 'versions', label: 'Versions' }, { id: 'decisions', label: 'Decisions guide' }, { id: 'skills', label: 'Skills' }]
   const stepFor = (id: LabTab) => path.steps.find(s => s.tab === id)
   const groups = [...new Set(report.checks.map(c => c.group))]
   const heading = [...nav, ...tools].find(n => n.id === tab)?.label ?? ''
@@ -150,7 +152,7 @@ export function Lab({ project, setProject, projectId, role, stepId, initialTab =
         <div><b>{s.title}</b><p>{s.why}</p><small>{s.detail}</small></div>
         <button className={`button ${path.next?.key === s.key ? 'accent' : 'outline'} small`} disabled={s.blocked}
           onClick={() => s.tab ? setTab(s.tab) : go(...(s.key === 'brief' ? ['business', 'vision'] : ['business', 'requirements']) as [Role, string])}>{s.done ? 'Open' : s.action}</button></li>)}</ol>
-      <p className="lab-fine">Not sure about a choice a coding agent will ask you? Open the Decisions guide. Changing your mind later? Save a version first.</p>
+      <p className="lab-fine">Not sure about a choice a coding agent will ask you? Open the Decisions guide. Want an agent to interview you or scaffold a design system? Open Skills. Changing your mind later? Save a version first.</p>
     </div>}
 
     {tab === 'draft' && <div className="lab-pane">
@@ -209,6 +211,7 @@ export function Lab({ project, setProject, projectId, role, stepId, initialTab =
 
     {tab === 'standards' && <Standards project={project} setProject={setProject} notify={notify} save={saveText} />}
     {tab === 'design' && <DesignSystem {...shared} onGo={go} />}
+    {tab === 'skills' && <Skills {...shared} />}
     {tab === 'plan' && <BuildPlan {...shared} patternId={pattern} />}
     {tab === 'decisions' && <Decisions />}
 

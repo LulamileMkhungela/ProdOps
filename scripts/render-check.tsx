@@ -170,7 +170,7 @@ const checks = [
     return (
       /placeholder="e\.g\. A booking tool/.test(out) &&
       ['Name the problem', 'Say who uses it', 'State the must-haves'].every((line) => out.includes(line)) &&
-      out.includes('Or start from an example') &&
+      !out.includes('start from an example') &&
       out.includes('Write at least a sentence')
     )
   })()],

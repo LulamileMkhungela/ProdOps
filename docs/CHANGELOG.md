@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Skills installed: the four `bm-*` skills, the two agentcanon skills, `frontend-design` and the Agent OS and Design OS commands, copied unchanged from their MIT repositories (sources, versions and licences in `.agents/UPSTREAM.md`), plus five new `prodops-*` skills. They ship in every agent pack and project download, are listed in the Lab's new Skills tab, and are loaded by the AI server. They are bundled as lazy chunks, so they do not enlarge the first page load. `npm run kit` no longer writes renamed copies of the skills.
+- Examples removed: the Orbit sample project, the "Use example template" buttons, example text in step templates and the example briefs in the five-stage flow. New projects show outlines (headings and questions only). A saved Orbit project from an earlier version is dropped on load; any other saved project is kept as it was.
+- `test:studio` passes (it was failing for lack of the `.agents` folder).
+
 - Lab is now a **guided build**: an 8-step Guide with a "Next" pill in the header, left-hand steps, per-role drafting coverage, an editable scope, "Fix" buttons on readiness checks and a "mark reviewed" button for stale work. Walked end to end in a headless Chrome against the static build.
 - Scope is derived from the compiled product sections, so milestone folders have readable names, and is stored at `specs/business/scope/scope.md`. Standards moved to `specs/development/code-standards/` so neither collides with, or reopens, a workflow step.
 - Fixed: starter example templates counted as a finished draft; the brief-length rule differed between the guide and readiness; static preview hid server-only controls.

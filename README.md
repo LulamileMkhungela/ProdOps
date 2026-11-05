@@ -49,10 +49,6 @@ Upload a screenshot separately to compare with the static HTML/CSS preview. The 
 
 To reuse an Angular or other component system, use **Add a reference** to upload multiple `.ts`, `.html`, `.scss`, `.css`, and other supported text files (20 KB per text file), select **Angular** or another frontend style and ask the AI to follow them. The AI can draft editable files in `solution/` during the development implementation step or `design/components/` during design screens; it does not install Angular packages, compile, run tests or guarantee that output matches the original system. Review and build the exported files in an appropriate IDE. This workflow does not connect arbitrary component registries or run Angular locally.
 
-## Orbit dashboard example
-
-Orbit is a fictional delivery dashboard with business and functional requirements, design requirements, named tokens, a component guide, editable code and example work across all five roles. Open the dashboard from the project picker, then choose a role to see its relevant work. In Development, **Try the dashboard** runs the current HTML/CSS/JavaScript in an isolated browser preview; filter work and mark tasks done or reopen them. Data is fictional and in memory; changes to tasks reset on reload. The example has no real users, accounts, shared backend or deployment. Its approvals, research and release checks are illustrative, not real evidence. Any older CASA project already in browser history is retained as a normal saved project so edits are not deleted.
-
 ## Optional server-wide AI setup
 
 Instead of personal keys, an administrator can configure an OpenAI-compatible chat-completions API (which can use OpenAI models) or the Anthropic Messages API (Claude) for a trusted, protected server. Existing ChatGPT, Claude and Codex browser accounts are not connected automatically. Without a provider, the dashboard example, manual editing and exports still work.
@@ -88,6 +84,12 @@ Open **Guided build** in the sidebar (the header pill shows the next step, e.g. 
 - **Scope & milestones** has an editable scope (saved outside the step folders, so it never reopens an approval), then drafts an in-scope / out-of-scope list, then an HTML PRD and numbered milestones, each with a prompt (plan first, build only this, write a log) and a log template.
 - **Decisions** is a written guide to common trade-offs (client or server search, fixed or configurable fields, delete or archive, and more).
 - **Agent pack** downloads one zip with `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor rules, Copilot instructions, milestone prompts and your specs. Choose web, Expo or both.
+
+## Skills
+
+`.agents/skills/` holds the installed skills and `.agents/commands/` the slash commands, listed in [.agents/UPSTREAM.md](.agents/UPSTREAM.md). The `bm-*` skills (PRD creator, design system, skill builder, favicon creator), the agentcanon skills, `frontend-design` and the Agent OS and Design OS commands are copied unchanged from the open-source (MIT) repositories at github.com/buildermethods, with their licences and commit versions recorded. Five `prodops-*` skills are original to ProdOps (one per role, plus how to build from a pack). `.claude/skills` links to the same folder.
+
+They are used in three places: every **Agent pack** and **Download project** includes them and AGENTS.md says when to reach for each; the Lab's **Skills** tab lists them with copy-ready prompts and a download for installing them on your computer; and the optional AI server loads the role's skills into its prompts.
 
 ## Checks
 

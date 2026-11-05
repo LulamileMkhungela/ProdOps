@@ -8,7 +8,7 @@ import { SCOPE_PATH } from './paths'
 import { listStandards } from './standards'
 
 export type StepKey = 'brief' | 'draft' | 'review' | 'standards' | 'design' | 'plan' | 'readiness' | 'pack'
-export type Tab = 'guide' | 'draft' | 'standards' | 'design' | 'plan' | 'readiness' | 'pack' | 'versions' | 'decisions'
+export type Tab = 'guide' | 'draft' | 'standards' | 'design' | 'plan' | 'readiness' | 'pack' | 'versions' | 'decisions' | 'skills'
 export interface JourneyStep { key: StepKey; title: string; why: string; done: boolean; detail: string; blocked: boolean; tab: Tab | null; action: string }
 export interface Journey { steps: JourneyStep[]; done: number; next: JourneyStep | null }
 

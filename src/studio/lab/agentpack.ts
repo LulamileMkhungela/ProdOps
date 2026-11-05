@@ -28,7 +28,26 @@ const platformRules = (platform: Platform) => platform === 'web'
     ? ['Build with Expo and React Native. Map each design token to a theme object; do not use CSS.', 'Use React Navigation (or Expo Router) for the routes in the architecture spec.', 'Design for touch: 44pt targets, safe areas, one-handed reach, offline-tolerant states.', 'Treat every “hover” interaction in the specs as a press or long-press.']
     : ['Share the data layer and business rules between a React web app and an Expo / React Native app.', 'Keep screens separate per platform; map tokens to CSS variables on web and a theme object on mobile.', 'Touch targets 44pt on mobile; responsive layout on web.']
 
-export function agentsMarkdown(project: StudioProject, platform: Platform): string {
+/** Which installed skill to reach for, by situation. Shown in AGENTS.md when skills are in the pack. */
+export const SKILL_GUIDE: [string, string][] = [
+  ['prodops-handoff', 'Start here: how to read this pack and build one milestone at a time'],
+  ['bm-prd-creator', 'The brief is thin or scope is unclear: interview the user into a PRD and milestone prompts'],
+  ['prodops-product-workflow', 'Requirements, user stories and the in/out-of-scope list need work'],
+  ['bm-design-system', 'The project has no design system yet (React + Tailwind v4): scaffold one with a live reference page'],
+  ['prodops-experience-design', 'Designing flows and screens from requirements and tokens'],
+  ['frontend-design', 'Building distinctive, production-grade interfaces that avoid generic styling'],
+  ['prodops-quality-engineering', 'Writing the test strategy, cases and regression list'],
+  ['prodops-delivery-operations', 'Preparing release, rollback, monitoring and go-live'],
+  ['bm-skill-builder', 'The user repeats a process and wants it turned into a skill'],
+  ['bm-favicon-creator', 'A favicon set is needed'],
+  ['agentcanon-repo', 'Make this repo use one .agents/skills folder for every tool'],
+]
+
+export function skillsSection(): string {
+  return `## Skills installed in \`.agents/skills/\`\n\nRead a skill's \`SKILL.md\` before doing the kind of work it describes. Claude Code reads \`.claude/skills\`; link it once with \`ln -s ../.agents/skills .claude/skills\`.\n\n${SKILL_GUIDE.map(([n, w]) => `- \`${n}\`: ${w}`).join('\n')}\n\nSlash-style commands for standards and design are in \`.agents/commands/\` (\`agent-os/\`, \`design-os/\`, \`prodops/\`). Sources and licences: \`.agents/UPSTREAM.md\`.\n`
+}
+
+export function agentsMarkdown(project: StudioProject, platform: Platform, withSkills = false): string {
   const standards = listStandards(project)
   const hasDesign = project.files.some(f => f.path === 'design/design-tokens.json' || f.path === 'design/design-system.md')
   const approved = Object.entries(project.stepDecisions).filter(([, d]) => d.status === 'approved').map(([k]) => k)
@@ -60,7 +79,7 @@ Ask, and explain the trade-offs of each option in plain language (cost, risk, wh
 ${hasDesign ? designRules(platform) + '\n' : ''}${standards.length ? injectMarkdown(standards, 'reference').replace('## Standards to follow', `## Standards to follow\n\nThe index is \`${INDEX_PATH}\`: read it first, and open a standard only when its description fits the task.`) + '\n' : ''}## Target platform
 ${platformRules(platform).map(r => `- ${r}`).join('\n')}
 
-## Definition of done
+${withSkills ? skillsSection() + '\n' : ''}## Definition of done
 - Behaviour matches the spec and passes its tests
 - Loading, empty, error and success states exist
 - Accessible: contrast 4.5:1, keyboard or screen-reader reachable, labelled inputs
@@ -83,13 +102,16 @@ Then implement **${label}** for ${project.name} (${PLATFORMS.find(p => p.id === 
 - Stop at the end of this milestone and report: what was built, what was skipped, and which spec lines you were unsure about.
 `
 
-export interface PackOptions { platform: Platform; now?: Date }
+/** `installFiles` are the `.agents/` skills, commands and licences, loaded by the caller (they are bundled lazily in the browser). */
+export interface PackOptions { platform: Platform; now?: Date; installFiles?: Record<string, string> }
 
 export async function buildAgentPack(project: StudioProject, options: PackOptions): Promise<JSZip> {
   const zip = new JSZip()
   const { platform } = options
   const report = analyse(project)
-  const agents = agentsMarkdown(project, platform)
+  const install = options.installFiles ?? {}
+  const agents = agentsMarkdown(project, platform, Object.keys(install).some(p => p.endsWith('/SKILL.md')))
+  for (const [path, content] of Object.entries(install)) zip.file(path, content)
 
   zip.file('AGENTS.md', agents)
   zip.file('CLAUDE.md', `@AGENTS.md\n\n# Claude Code notes\n- Start in plan mode (Shift+Tab) for each milestone prompt in \`prompts/\`.\n`)

@@ -24,8 +24,8 @@ export interface Report {
 }
 
 const STOP = new Set('about above after again against allow allows also always and any are because been before being between both build can cannot could does done each either else ensure every from have into must need needs only other should shall some such than that their them then there these they this those through under until upon using very want when where which while will with within without would your user users system page pages'.split(' '))
-const PLACEHOLDER = /example template|replace before approval|lorem ipsum|\bTODO\b|\bTBD\b|\bXXX\b|\[replace|\[insert|<your /gi
-export const PLACEHOLDER_HELP = 'Placeholders found: "Example template", TODO, TBD, lorem ipsum or bracketed fill-ins.'
+const PLACEHOLDER = /outline — write under|example template|replace before approval|lorem ipsum|\bTODO\b|\bTBD\b|\bXXX\b|\[replace|\[insert|<your /gi
+export const PLACEHOLDER_HELP = 'Placeholders found: an unfilled outline, TODO, TBD, lorem ipsum or bracketed fill-ins.'
 
 export const words = (text: string) => (text.match(/[\p{L}\p{N}'’-]+/gu) ?? []).length
 export const placeholderCount = (text: string) => (text.match(PLACEHOLDER) ?? []).length

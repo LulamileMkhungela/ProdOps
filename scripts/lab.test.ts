@@ -395,3 +395,12 @@ test('the brief length rule is the same in the guide and the readiness check', (
   assert.equal(journey(p).steps[0].done, true)
   assert.equal(analyse(p).checks.find(c => c.id === 'brief')!.level, 'pass')
 })
+
+test('the pack installs the given skills and tells the agent when to use each', async () => {
+  const p = project()
+  const zip = await buildAgentPack(p, { platform: 'web', installFiles: { '.agents/skills/bm-prd-creator/SKILL.md': '---\nname: bm-prd-creator\n---', '.agents/UPSTREAM.md': 'x' } })
+  assert.ok(zip.file('.agents/skills/bm-prd-creator/SKILL.md') && zip.file('.agents/UPSTREAM.md'))
+  const agents = await zip.file('AGENTS.md')!.async('string')
+  assert.match(agents, /Skills installed in/); assert.match(agents, /bm-prd-creator/); assert.match(agents, /prodops-handoff/)
+  assert.doesNotMatch(await (await buildAgentPack(p, { platform: 'web' })).file('AGENTS.md')!.async('string'), /Skills installed in/)
+})

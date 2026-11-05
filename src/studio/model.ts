@@ -5,7 +5,7 @@ export interface FileItem { path: string; content: string }
 export interface Reference { id: string; name: string; mime: 'image/png' | 'image/jpeg' | 'image/webp' | 'application/pdf' | 'text/plain'; source?: string; data: string; text: string; role: Role; step: string }
 export type StepStatus = 'not_started' | 'in_progress' | 'approved' | 'rejected' | 'revisit'
 export interface StepDecision { status: StepStatus; note: string }
-export interface StudioProject { version: 1; name: string; sample?: boolean; mode: 'new' | 'existing'; stepDecisions: Record<string, StepDecision>; spec: string; businessApproved: boolean; designStale: boolean; developmentStale: boolean; files: FileItem[]; references: Reference[]; answers: Record<string, string> }
+export interface StudioProject { version: 1; name: string; mode: 'new' | 'existing'; stepDecisions: Record<string, StepDecision>; spec: string; businessApproved: boolean; designStale: boolean; developmentStale: boolean; files: FileItem[]; references: Reference[]; answers: Record<string, string> }
 export const initialProject: StudioProject = { version: 1, name: 'Untitled project', mode: 'new', stepDecisions: {}, spec: '', businessApproved: false, designStale: false, developmentStale: false, files: [], references: [], answers: {} }
 const roleNames: Role[] = ['business', 'design', 'development', 'quality', 'delivery']
 export const roleOf = (path: string): Role | null => {
@@ -33,7 +33,7 @@ export function readProject(value: unknown): StudioProject | null {
   if (!answers || typeof answers !== 'object' || Array.isArray(answers) || Object.keys(answers).length > 100 || Object.entries(answers).some(([k, val]) => !/^[a-z-]+\/[a-z-]+$/.test(k) || typeof val !== 'string' || val.length > 4000)) return null
   const decisions = v.stepDecisions ?? {}
   if (!decisions || typeof decisions !== 'object' || Array.isArray(decisions) || Object.keys(decisions).length > 100 || Object.entries(decisions).some(([key, d]) => !/^[a-z-]+\/[a-z-]+$/.test(key) || !d || typeof d !== 'object' || !['not_started','in_progress','approved','rejected','revisit'].includes(d.status) || typeof d.note !== 'string' || d.note.length > 2000)) return null
-  return { version: 1, name: v.name, sample: v.sample === true, mode: v.mode === 'existing' ? 'existing' : 'new', stepDecisions: decisions, spec: v.spec, businessApproved: v.businessApproved === true && v.files.some(f => roleOf(f.path) === 'business') && v.spec.trim().length >= 20, designStale: v.designStale === true, developmentStale: v.developmentStale === true, files: v.files, references, answers }
+  return { version: 1, name: v.name, mode: v.mode === 'existing' ? 'existing' : 'new', stepDecisions: decisions, spec: v.spec, businessApproved: v.businessApproved === true && v.files.some(f => roleOf(f.path) === 'business') && v.spec.trim().length >= 20, designStale: v.designStale === true, developmentStale: v.developmentStale === true, files: v.files, references, answers }
 }
 export function updateFile(project: StudioProject, path: string, content: string): StudioProject {
   const role = roleOf(path)

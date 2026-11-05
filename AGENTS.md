@@ -5,7 +5,7 @@
 > model using either a tab-scoped personal key or server configuration in explicitly trusted mode; generation is not a local compiler and never proves
 > code was run or tested. The previous five-stage workspace described below is
 > retained as legacy source and is no longer the active entry point. See
-> `README.md` for current setup, handoff, privacy and deployment limits. The fictional Orbit dashboard is in `src/studio/dashboard.ts`; sample approvals are illustrative, not evidence.
+> `README.md` for current setup, handoff, privacy and deployment limits.
 
 ProdOps is a product-planning workspace: it turns an idea into a specified,
 designed, exportable product without asking the builder for a model, a key or
@@ -35,7 +35,7 @@ Commands live in `.agents/commands/prodops/` — twenty of them: the ten stage
 commands above, five standards commands, and five workflow commands
 (`/write-spec`, `/create-tasks`, `/implement-tasks`, `/orchestrate-tasks`,
 `/improve-skills`) that carry a shaped idea through spec, tasks, implementation
-and verification. Skills live in `.agents/skills/`.
+and verification. Upstream Agent OS and Design OS commands are in `.agents/commands/agent-os/` and `.agents/commands/design-os/`. Skills live in `.agents/skills/`; their sources and licences are in `.agents/UPSTREAM.md`.
 
 ## Standards commands
 

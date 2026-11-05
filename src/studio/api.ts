@@ -13,7 +13,7 @@ const env: Record<string, string | undefined> = (import.meta as { env?: Record<s
 export const STATIC_HOST = env.VITE_STATIC_HOST === '1'
 
 export const NO_SERVER_MESSAGE =
-  'This hosted preview has no server, so AI drafting and Figma or GitHub imports are not available here. Instant draft, editing, the Orbit example, readiness checks, versions, approvals and exports all work.'
+  'This hosted preview has no server, so AI drafting and Figma or GitHub imports are not available here. Instant draft, editing, readiness checks, versions, approvals and exports all work.'
 
 export function apiFetch(input: string, init?: RequestInit): Promise<Response> {
   if (STATIC_HOST) return Promise.reject(new Error(NO_SERVER_MESSAGE))

@@ -116,12 +116,21 @@ try {
   await type(lab().querySelector('input[aria-label="Describe the question"]'), 'Should search be server side or client side?')
   assert.match(lab().textContent!, /For a small first version/)
 
+  // Skills
+  await nav('Skills')
+  await act(async () => { await tick(200) })
+  const skillCards = lab().querySelectorAll('.lab-card').length
+  assert.ok(skillCards >= 12, `skills are listed (${skillCards} cards)`)
+  for (const name of ['bm-prd-creator', 'bm-design-system', 'bm-skill-builder', 'bm-favicon-creator', 'agentcanon-repo', 'prodops-handoff']) assert.match(lab().textContent!, new RegExp(name))
+  assert.match(lab().textContent!, /Commands \(\d+\)/)
+
   // Agent pack
   await nav('Hand off')
   await click('Download agent pack', lab())
-  await tick(200)
+  await act(async () => { await tick(1500) })
   const zip = await JSZip.loadAsync(await exported!.arrayBuffer())
-  for (const name of ['AGENTS.md', 'CLAUDE.md', 'GEMINI.md', '.cursor/rules/prodops.mdc', 'prompts/iterate.md', 'build-plan/prd.html', 'design/design-system.md', 'specs/development/code-standards/index.yaml']) assert.ok(zip.file(name), name)
+  for (const name of ['AGENTS.md', 'CLAUDE.md', 'GEMINI.md', '.cursor/rules/prodops.mdc', 'prompts/iterate.md', 'build-plan/prd.html', 'design/design-system.md', 'specs/development/code-standards/index.yaml', '.agents/skills/bm-prd-creator/SKILL.md', '.agents/skills/bm-design-system/references/agent-instructions.md', '.agents/commands/agent-os/inject-standards.md', '.agents/UPSTREAM.md']) assert.ok(zip.file(name), name)
+  assert.match(await zip.file('AGENTS.md')!.async('string'), /Skills installed in/)
   assert.deepEqual(requests, [], 'the Lab made no network requests')
   console.log('Lab smoke passed: readiness, instant draft, versions, iteration brief and agent pack, with no network.')
 } finally { await act(async () => root.unmount()); await vite.close(); globalThis.fetch = oldFetch }

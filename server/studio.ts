@@ -38,18 +38,18 @@ export async function loadAllSkillMarkdown(root = process.cwd()): Promise<string
 export type StudioRole = Role
 export type StudioFile = { path: string; content: string }
 const roleSkills: Record<StudioRole, string[]> = {
-  business: ['prd-creator/SKILL.md', 'product-workflow/SKILL.md'],
-  design: ['experience-design/SKILL.md', 'design-system/SKILL.md', 'frontend-design/SKILL.md', 'design-system/references/agent-instructions.md'],
-  development: ['agents-repo/SKILL.md', 'design-system/SKILL.md'],
-  quality: ['quality-engineering/SKILL.md'],
-  delivery: ['delivery-operations/SKILL.md'],
+  business: ['bm-prd-creator/SKILL.md', 'prodops-product-workflow/SKILL.md'],
+  design: ['prodops-experience-design/SKILL.md', 'bm-design-system/SKILL.md', 'frontend-design/SKILL.md', 'bm-design-system/references/agent-instructions.md'],
+  development: ['prodops-handoff/SKILL.md', 'agentcanon-repo/SKILL.md', 'bm-design-system/SKILL.md'],
+  quality: ['prodops-quality-engineering/SKILL.md'],
+  delivery: ['prodops-delivery-operations/SKILL.md'],
 }
 export async function loadRoleSkills(role: StudioRole, root = process.cwd()): Promise<string> {
   const base = join(root, '.agents', 'skills')
   const paths = [...roleSkills[role]]
   if (role === 'business') {
-    const steps = await readdir(join(base, 'prd-creator', 'steps'))
-    paths.push(...steps.filter(x => x.endsWith('.md')).sort().map(x => `prd-creator/steps/${x}`))
+    const steps = await readdir(join(base, 'bm-prd-creator', 'steps'))
+    paths.push(...steps.filter(x => x.endsWith('.md')).sort().map(x => `bm-prd-creator/steps/${x}`))
   }
   return (await Promise.all(paths.map(async path => `### ${path}\n${await readFile(join(base, path), 'utf8')}`))).join('\n\n')
 }

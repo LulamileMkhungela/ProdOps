@@ -9,8 +9,8 @@
 import type { FileItem, StudioProject } from '../model'
 
 export interface Standard { slug: string; name: string; description: string; body: string }
-export const STANDARDS_DIR = 'specs/development/standards/'
-export const INDEX_PATH = `${STANDARDS_DIR}index.yaml`
+import { INDEX_PATH, STANDARDS_DIR } from './paths'
+export { INDEX_PATH, STANDARDS_DIR }
 export const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'standard'
 
 // ---- files ----------------------------------------------------------------

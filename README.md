@@ -78,14 +78,14 @@ This is intended for a trusted single-user environment. The same-origin check is
 
 ## ProdOps Lab
 
-Open **ProdOps Lab** in the sidebar. Everything in it runs in the browser, so it also works on the static preview. See [docs/GAPS.md](docs/GAPS.md) for why each part exists and what it cannot do.
+Open **Guided build** in the sidebar (the header pill shows the next step, e.g. “Guide 3/8”). It walks one path: brief → draft specs → review and approve → standards → design system → scope and milestones → readiness → hand off. Everything in it runs in the browser, so it also works on the static preview. See [docs/GAPS.md](docs/GAPS.md) for why each part exists and what it cannot do.
 
-- **Instant draft** writes labelled template drafts for a step, a role or the whole project from your brief, with no AI model.
+- **Draft specs** shows the product pattern it detected (change it if it is wrong), then drafts each of the five roles, or all of them, from your brief with no AI model. Files are labelled as template drafts; the scope list is written with the requirements.
 - **Readiness** scores the project for handoff: placeholders behind approvals, contrast, generic palettes and headlines, and a requirement → design → test traceability matrix.
 - **Versions** saves snapshots, compares them with current work, shows which roles must look again, and writes an iteration brief for an agent.
 - **Standards** discovers conventions from code you choose (read in your browser, never uploaded), asks why for each, keeps an `index.yaml`, supports saved profiles, and injects only the relevant standards into a task by reference or by copy.
 - **Design system** generates a reference page (colours, type, buttons, forms, badges, listings, modal; when to use each, sample markup) and agent rules against design drift.
-- **PRD & milestones** drafts an in-scope / out-of-scope list, then an HTML PRD and numbered milestones, each with a prompt (plan first, build only this, write a log) and a log template.
+- **Scope & milestones** has an editable scope (saved outside the step folders, so it never reopens an approval), then drafts an in-scope / out-of-scope list, then an HTML PRD and numbered milestones, each with a prompt (plan first, build only this, write a log) and a log template.
 - **Decisions** is a written guide to common trade-offs (client or server search, fixed or configurable fields, delete or archive, and more).
 - **Agent pack** downloads one zip with `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor rules, Copilot instructions, milestone prompts and your specs. Choose web, Expo or both.
 

@@ -1,28 +1,45 @@
-import { useMemo, useState, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
 import JSZip from 'jszip'
 import type { StudioProject } from '../model'
 import { upsertFiles } from './apply'
 import type { Platform } from './agentpack'
+import type { Role } from '../workflows'
 import { designSystemFiles, designSystemHtml } from './designsystem'
-import { buildPlanFiles, scopeDraft, SCOPE_PATH } from './prd'
+import { buildPlanFiles, parseScope, scopeDraft, SCOPE_PATH } from './prd'
+import { compileBrief, scopeFromCompiled } from './offline'
 import { matchTradeoffs, TRADEOFFS, tradeoffMarkdown } from './tradeoffs'
 
-interface Props { project: StudioProject; setProject: Dispatch<SetStateAction<StudioProject>>; notify: (m: string) => void; save: (text: string, name: string) => void; platform: Platform }
+interface Props { project: StudioProject; setProject: Dispatch<SetStateAction<StudioProject>>; notify: (m: string) => void; save: (text: string, name: string) => void; platform: Platform; onGo?: (role: Role, stepId: string) => void }
 
-export function DesignSystem({ project, setProject, notify, platform }: Props) {
+export function DesignSystem({ project, setProject, notify, platform, onGo }: Props) {
   const html = useMemo(() => designSystemHtml(project), [project])
   const has = project.files.some(f => f.path === 'design/design-system.md')
   return <div className="lab-pane">
     <p>A reference page for your colours, type, buttons, forms, badges, listings and modals, with when to use each, when not to, and sample markup. It is generated from <code>design/design-tokens.json</code> and written into the project with agent rules that stop <b>design drift</b>: an agent that has no shared sense of the interface reinvents it every session.</p>
     <iframe className="lab-frame" title="Design system preview" sandbox="" srcDoc={html} />
     <div className="lab-actions"><button className="button accent" onClick={() => { setProject(p => upsertFiles(p, designSystemFiles(p, platform))); notify(has ? 'Design system regenerated from the tokens.' : 'Design system written into design/. Open it under Design.') }}>{has ? 'Regenerate from tokens' : 'Add to project'}</button></div>
-    <p className="lab-fine">Change a colour in Design → tokens, then regenerate. The page documents component shapes as guidance; it does not generate component code.</p>
+    <p className="lab-fine">The colours are from your design settings{onGo && <> (<button className="lab-link inline" onClick={() => onGo('design', 'system')}>open Design to change them</button>)</>}. Change them first if the defaults are not yours, then regenerate. The page documents component shapes as guidance; it does not generate component code.</p>
   </div>
 }
 
-export function BuildPlan({ project, setProject, notify, save, platform }: Props) {
+export function BuildPlan({ project, setProject, notify, save, platform, patternId = '' }: Props & { patternId?: string }) {
   const { plan, files } = useMemo(() => buildPlanFiles(project, platform), [project, platform])
-  const hasScope = project.files.some(f => f.path === SCOPE_PATH)
+  const saved = project.files.find(f => f.path === SCOPE_PATH)?.content ?? ''
+  const hasScope = !!saved
+  const [text, setText] = useState(saved)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => { setText(saved) }, [saved])
+  const counts = useMemo(() => parseScope(text), [text])
+  async function draft() {
+    if (hasScope && !window.confirm('Replace your scope with a fresh draft? Your edits to it will be lost.')) return
+    setBusy(true)
+    try {
+      let content: string
+      if (project.spec.trim().length >= 40) content = scopeFromCompiled(await compileBrief(project.spec, { archetypeId: patternId || undefined }))
+      else content = scopeDraft(project)
+      setProject(p => upsertFiles(p, [{ path: SCOPE_PATH, content }])); notify('Scope drafted. Cut what you are not building now and keep the out-of-scope list honest, then save.')
+    } finally { setBusy(false) }
+  }
   async function downloadZip() {
     const zip = new JSZip(); for (const f of files) zip.file(f.path, f.content)
     const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
@@ -30,10 +47,10 @@ export function BuildPlan({ project, setProject, notify, save, platform }: Props
   }
   return <div className="lab-pane">
     <p>Decide what is <b>out</b> of scope as carefully as what is in, then break the build into milestones. Each milestone gets a prompt that says: plan first, read the PRD, build only this, write a log. The log is how one milestone hands over to the next.</p>
-    <div className="lab-actions"><button className="button accent" onClick={() => {
-      if (hasScope && !window.confirm('Replace your scope file with a fresh draft?')) return
-      setProject(p => upsertFiles(p, [{ path: SCOPE_PATH, content: scopeDraft(p) }])); notify('Scope drafted in specs/business/requirements/scope.md. Cut what you are not building and keep the out-of-scope list honest.')
-    }}>{hasScope ? 'Redraft scope' : 'Draft scope from requirements'}</button></div>
+    <div className="lab-actions"><button className="button accent" disabled={busy} onClick={() => void draft()}>{busy ? 'Drafting…' : hasScope ? 'Redraft scope' : project.files.some(f => /^specs\/business\/requirements\//.test(f.path)) || project.spec.trim().length >= 40 ? 'Draft scope from my brief' : 'Draft scope'}</button></div>
+    <label htmlFor="lab-scope">Scope (Markdown): the list order is the build order</label>
+    <textarea id="lab-scope" className="lab-text" rows={12} spellCheck={false} placeholder={'## In scope\n- Feature one\n\n## Out of scope\n- Something you will not build yet'} value={text} onChange={e => setText(e.target.value)} />
+    <div className="lab-actions"><button className="button outline" disabled={text === saved || !text.trim()} onClick={() => { setProject(p => upsertFiles(p, [{ path: SCOPE_PATH, content: text }])); notify('Scope saved. The milestones below follow it.') }}>{text === saved ? 'Scope saved' : 'Save scope'}</button><small className="lab-fine">{counts.inScope.length} in scope · {counts.outScope.length} out of scope · {counts.features.length} feature section(s)</small></div>
     {plan.notes.map((n, i) => <p key={i} className="lab-caution">{n}</p>)}
     {plan.milestones.length > 0 && <>
       <div className="lab-versions">{plan.milestones.map(m => <div key={m.n} className="lab-version"><div><b>{String(m.n).padStart(2, '0')} · {m.title}</b><small>{m.goal}</small></div></div>)}</div>

@@ -11,6 +11,7 @@
 import { specPrefix, workflows, type Role } from '../workflows'
 import type { FileItem, StudioProject } from '../model'
 import type { Project } from '../../types'
+import { SCOPE_PATH } from './paths'
 
 export const DRAFT_NOTE = '> **Local template draft.** Generated in your browser from the brief by the ProdOps compiler. No AI model was used and nothing was validated with real users. Replace anything that does not fit before approval.'
 
@@ -88,6 +89,35 @@ const UPSTREAM: Record<Role, string> = {
 }
 
 /** Files for one step. Throws if the brief is empty. */
+const OUT_DEFAULTS = [
+  'Settings screens for custom fields or custom stages (hard-code them for version one)',
+  'Accounts, roles and permissions beyond the people named in the brief',
+  'Integrations with other services, imports and exports',
+  'Admin dashboards and reports beyond what each feature needs',
+]
+/** Scope from the compiler's sections: MVP sections are in, Next and Later are out for version one. */
+export function scopeFromCompiled(compiled: Project): string {
+  const inS = compiled.sections.filter(s => s.priority === 'MVP')
+  const outS = compiled.sections.filter(s => s.priority !== 'MVP')
+  const one = (t: string) => t.replace(/\s+/g, ' ').trim()
+  return `# Scope (version one)
+
+${DRAFT_NOTE}
+
+> The list order is the build order. Delete what you are not building now and move it to Out of scope.
+
+## In scope
+
+${inS.map(s => `- ${s.name} — ${one(s.purpose)}`).join('\n') || '- _Nothing listed._'}
+
+## Out of scope
+
+${[...outS.map(s => `${s.name} (${s.priority.toLowerCase()}) — ${one(s.purpose)}`), ...OUT_DEFAULTS].map(o => `- ${o}`).join('\n')}
+
+${inS.map(s => `## Feature: ${s.name}\n\n- In: ${one(s.purpose)}\n${s.requirements.filter(r => r.priority === 'must').slice(0, 3).map(r => `- In: ${one(r.text)}`).join('\n')}\n${s.outOfScope.slice(0, 3).map(o => `- Out: ${one(o)}`).join('\n') || '- Out: _What this feature will not do in version one._'}`).join('\n\n')}
+`
+}
+
 export function draftFiles(project: StudioProject, compiled: Project, role: Role, stepId: string): FileItem[] {
   const brief = project.spec.trim()
   if (!brief) throw new Error('Add a brief or project context first; the draft is built from it.')
@@ -106,6 +136,7 @@ export function draftFiles(project: StudioProject, compiled: Project, role: Role
   if (role === 'business' && stepId === 'requirements') {
     const must = compiled.sections.flatMap(s => s.requirements.filter(r => r.priority === 'must').map(r => `${r.text} (${s.name})`))
     files.push(
+      { path: SCOPE_PATH, content: scopeFromCompiled(compiled) },
       { path: 'specs/business/requirements/business-requirements.md', content: `# Business requirements\n\n${DRAFT_NOTE}\n\n${bullets(compiled.brief.jobs.map(j => `The product must help people ${j.charAt(0).toLowerCase()}${j.slice(1)}`))}\n` },
       { path: 'specs/business/requirements/functional-requirements.md', content: `# Functional requirements\n\n${DRAFT_NOTE}\n\n${numbered(must.length ? must : compiled.sections.flatMap(s => s.requirements.map(r => `${r.text} (${s.name})`)))}\n` },
     )

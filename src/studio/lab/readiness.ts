@@ -5,6 +5,7 @@
  * The traceability and distinctiveness results are heuristics and are labelled
  * as such: they point at places to look, they do not prove a design is good.
  */
+import { INDEX_PATH, SCOPE_PATH, STANDARDS_DIR } from './paths'
 import { workflows, type Role } from '../workflows'
 import { roleOf, type StudioProject } from '../model'
 import { contrast, hsl, isHex } from './color'
@@ -85,8 +86,8 @@ export function analyse(project: StudioProject): Report {
 
   // ---- process ---------------------------------------------------------
   const brief = project.spec.trim()
-  add('Process', 'brief', brief.length >= 200 ? 'pass' : brief.length ? 'warn' : 'fail', 'Shared brief',
-    brief.length >= 200 ? `${words(brief)} words of shared context.` : brief.length ? 'The brief is very short; later steps will be guesswork.' : 'There is no brief yet. Every role starts from it.')
+  add('Process', 'brief', brief.length >= 120 ? 'pass' : brief.length ? 'warn' : 'fail', 'Shared brief',
+    brief.length >= 120 ? `${words(brief)} words of shared context.` : brief.length ? 'The brief is very short; later steps will be guesswork.' : 'There is no brief yet. Every role starts from it.')
   const fakeApproved = approved.filter(s => s.placeholders > 0 || s.words < 40)
   add('Process', 'approved-real', fakeApproved.length ? 'fail' : 'pass', 'Approvals rest on real content',
     fakeApproved.length ? `Approved but still placeholder or near-empty: ${fakeApproved.map(s => `${s.role}/${s.step}`).join(', ')}.` : approved.length ? `${approved.length} approved step(s), none with placeholders.` : 'No steps are approved yet.')
@@ -120,12 +121,12 @@ export function analyse(project: StudioProject): Report {
   }
 
   // ---- build plan, standards and design system ------------------------
-  const scopeFile = project.files.find(f => f.path === 'specs/business/requirements/scope.md')
+  const scopeFile = project.files.find(f => f.path === SCOPE_PATH)
   if (requirements.length || scopeFile) {
     const outItems = scopeFile ? (/##\s+Out of scope([\s\S]*?)(?=\n##\s|$)/i.exec(scopeFile.content)?.[1] ?? '').split('\n').filter(l => /^\s*[-*]\s+(?!_)/.test(l) && !/^\s*[-*]\s+>/.test(l)).length : 0
     add('Build plan', 'scope-out', outItems ? 'pass' : 'warn', 'Out of scope is written down', outItems ? `${outItems} item(s) listed as out of scope.` : 'No out-of-scope list. Agents fill that gap with features nobody asked for. Use PRD & milestones to draft one.')
   }
-  const standardsCount = project.files.filter(f => f.path.startsWith('specs/development/standards/') && f.path.endsWith('.md')).length
+  const standardsCount = project.files.filter(f => f.path.startsWith(STANDARDS_DIR) && f.path.endsWith('.md') && f.path !== INDEX_PATH).length
   add('Build plan', 'standards', standardsCount ? 'pass' : 'warn', 'Standards are written down', standardsCount ? `${standardsCount} standard(s), indexed for agents.` : 'No standards yet. Agents will rediscover your conventions every session.')
   if (project.files.some(f => f.path === 'design/design-tokens.json')) {
     const hasSystem = project.files.some(f => f.path === 'design/design-system.md')

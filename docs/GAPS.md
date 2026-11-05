@@ -23,7 +23,7 @@ A comparison with the Design OS workflow shown in its public demo (vision → ro
 | Stop design drift | **Design system** page from your tokens, with when-to-use, when-not-to-use and sample markup, plus rules in `AGENTS.md`. | Documents component shapes; generates no component code. Rules are followed most of the time, not always. |
 | Say what is out of scope | **PRD & milestones** drafts In / Out lists; readiness warns if Out is empty. | The out-of-scope suggestions are generic until you edit them. |
 | Buildable milestones with a log that passes the baton | Each milestone has a prompt (plan first, read PRD and earlier logs, build only this, write the log) and a log template. | Order follows your list with a keyword-based dependency nudge. |
-| Understand the question you are asked | **Decisions** explains 12 common trade-offs with a default for a small first version. | A written guide, not a model; it cannot answer anything outside it. |
+| Understand the question you are asked | **Decisions** explains 13 common trade-offs with a default for a small first version. | A written guide, not a model; it cannot answer anything outside it. |
 
 ## What ProdOps was missing
 

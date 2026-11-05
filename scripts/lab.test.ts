@@ -188,7 +188,7 @@ test('a standard round-trips through its file, even with quotes, and the index h
   assert.match(yaml, /description: "Every endpoint returns/)
   assert.equal(indexYaml([]).includes('standards: []'), true)
   const { files, remove } = withStandards(p, [], ['api-shape'])
-  assert.deepEqual(remove, ['specs/development/standards/api-shape.md'])
+  assert.deepEqual(remove, ['specs/development/code-standards/api-shape.md'])
   assert.doesNotMatch(files[0].content, /api-shape/)
 })
 
@@ -197,7 +197,7 @@ test('standards are suggested by task and injected by reference or by copy', () 
   assert.deepEqual(suggestStandards('tweak the brand colours on the pricing page', [STD, colours]).map(s => s.slug), ['colour-tokens'])
   assert.deepEqual(suggestStandards('unrelated words here', [STD, colours]), [])
   const ref = injectMarkdown([colours], 'reference')
-  assert.match(ref, /@specs\/development\/standards\/colour-tokens.md/)
+  assert.match(ref, /@specs\/development\/code-standards\/colour-tokens.md/)
   assert.doesNotMatch(ref, /Use variables\./)
   assert.match(injectMarkdown([colours], 'copy'), /Use variables\./)
   assert.equal(injectMarkdown([], 'copy'), '')
@@ -309,7 +309,7 @@ test('milestone files tell the agent to plan first, stay in scope and write a lo
   assert.match(second, /milestone-log\.md/)
   assert.match(second, /Do not build/)
   assert.match(second, /Expo/)
-  assert.match(second, /@specs\/development\/standards\/plan\.md/)
+  assert.match(second, /@specs\/development\/code-standards\/plan\.md/)
   assert.match(files.find(f => f.path.includes('/01-') && f.path.endsWith('milestone-log.md'))!.content, /What is new \(plain language\)/)
   const html = files.find(f => f.path === 'build-plan/prd.html')!.content
   assert.match(html, /Out of scope/)
@@ -333,7 +333,7 @@ test('the pack carries standards, design system, PRD and milestones, and drops t
   ])
   const zip = await buildAgentPack(p, { platform: 'web' })
   const names = Object.keys(zip.files)
-  for (const must of ['build-plan/prd.html', 'build-plan/prd.md', 'design/design-system.html', 'design/design-system.md', 'specs/development/standards/index.yaml', 'prompts/inject-standards.md']) assert.ok(names.includes(must), must)
+  for (const must of ['build-plan/prd.html', 'build-plan/prd.md', 'design/design-system.html', 'design/design-system.md', 'specs/development/code-standards/index.yaml', 'prompts/inject-standards.md']) assert.ok(names.includes(must), must)
   assert.ok(names.some(n => /^build-plan\/milestones\/02-.*\/prompt\.md$/.test(n)))
   assert.ok(!names.some(n => /^prompts\/\d\d-/.test(n)), 'generic numbered prompts are replaced by the plan')
   const agents = await zip.file('AGENTS.md')!.async('string')
@@ -345,4 +345,53 @@ test('the pack carries standards, design system, PRD and milestones, and drops t
   const bare = await buildAgentPack(project(), { platform: 'web' })
   assert.ok(!Object.keys(bare.files).some(n => n.startsWith('build-plan/')))
   assert.doesNotMatch(await bare.file('AGENTS.md')!.async('string'), /Standards to follow/)
+})
+
+// ---- guided journey ----------------------------------------------------------
+import { journey } from '../src/studio/lab/journey'
+import { runDraft, targetsFor } from '../src/studio/lab/quick'
+import { scopeFromCompiled } from '../src/studio/lab/offline'
+import { STANDARDS_DIR } from '../src/studio/lab/standards'
+
+test('a fresh project is not reported as drafted just because it has starter templates', () => {
+  const j = journey({ ...freshProject(), spec: BRIEF })
+  assert.equal(j.steps.find(s => s.key === 'brief')!.done, true)
+  assert.equal(j.steps.find(s => s.key === 'draft')!.done, false)
+  assert.equal(j.next!.key, 'draft')
+  assert.equal(journey(freshProject()).next!.key, 'brief')
+})
+
+test('drafting every role replaces starter templates silently, covers all roles and reaches the review step', async () => {
+  let asked = 0
+  const r = await runDraft(project(), targetsFor('all', 'business', 'vision'), '', () => { asked++; return true })
+  assert.equal(asked, 0, 'no confirmation for example templates')
+  assert.ok(r.project.files.length <= 300)
+  const j = journey(r.project)
+  assert.equal(j.steps.find(s => s.key === 'draft')!.done, true)
+  assert.equal(j.next!.key, 'review')
+  assert.ok(r.project.files.some(f => f.path === SCOPE_PATH), 'scope is written with the requirements')
+})
+
+test('scope comes from the compiled sections, so milestones have readable names', async () => {
+  const compiled = await compileBrief(BRIEF)
+  const scope = parseScope(scopeFromCompiled(compiled))
+  assert.ok(scope.features.length >= 2 && scope.outScope.length >= 2)
+  const r = await runDraft(project(), targetsFor('all', 'business', 'vision'), '', () => true)
+  const files = buildPlanFiles(r.project, 'web').files
+  for (const f of files.filter(x => x.path.endsWith('/prompt.md'))) assert.ok(!/the-product-must|-i-fini/.test(f.path) && f.path.length < 70, f.path)
+})
+
+test('editing the scope or adding standards never reopens an approved requirements step', async () => {
+  const r = await runDraft(project(), targetsFor('all', 'business', 'vision'), '', () => true)
+  const approved = { ...r.project, stepDecisions: { ...r.project.stepDecisions, 'business/requirements': { status: 'approved' as const, note: '' } } }
+  const edited = upsertFiles(approved, [{ path: SCOPE_PATH, content: '# Scope\n\n## In scope\n- One\n\n## Out of scope\n- Two\n' }, { path: `${STANDARDS_DIR}x.md`, content: '---\nname: "X"\ndescription: "y"\n---\nz' }])
+  assert.equal(edited.stepDecisions['business/requirements'].status, 'approved')
+  assert.equal(listStandards(r.project).length, 0, 'workflow step files are not standards')
+})
+
+test('the brief length rule is the same in the guide and the readiness check', () => {
+  const brief = 'x'.repeat(150)
+  const p = { ...freshProject(), spec: brief }
+  assert.equal(journey(p).steps[0].done, true)
+  assert.equal(analyse(p).checks.find(c => c.id === 'brief')!.level, 'pass')
 })

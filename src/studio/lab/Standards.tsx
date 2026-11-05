@@ -76,7 +76,15 @@ export function Standards({ project, setProject, notify, save }: Props) {
       {standards.length > 0 && <p className="lab-fine">Files live in <code>{STANDARDS_DIR}</code> with an <code>index.yaml</code>; edit them under Development.</p>}
     </div>
 
-    <details className="lab-group" open><summary>Discover from your code</summary>
+    <details className="lab-group" open={standards.length === 0}><summary>Start from a profile</summary>
+      <p>A profile is a saved set of standards for a type of project. Apply one when you start something new.</p>
+      <label htmlFor="profile">Profile</label>
+      <select id="profile" value={profile.id} onChange={e => setProfileId(e.target.value)}>{profiles.map(p => <option key={p.id} value={p.id}>{p.name} ({p.standards.length})</option>)}</select>
+      <div className="lab-actions"><button className="button accent" onClick={applyProfile}>Apply to this project</button></div>
+      <div className="lab-row"><input className="lab-input" aria-label="Profile name" placeholder="Name for the current standards" value={profileName} onChange={e => setProfileName(e.target.value)} /><button className="button outline" onClick={saveProfile}>Save as profile</button></div>
+    </details>
+
+    <details className="lab-group"><summary>Discover from your code</summary>
       <p>Choose a folder or paste code. ProdOps looks for conventions that repeat (file naming, tokens vs raw colours, shared libraries, repeated idioms, test layout). It reads text in your browser and uploads nothing. It finds <i>what</i> repeats; only you know <i>why</i>, so it asks.</p>
       <input type="file" aria-label="Choose a code folder" multiple {...{ webkitdirectory: '' }} onChange={e => void pick(e.target.files)} />
       <textarea className="lab-text" aria-label="Paste code" rows={4} placeholder="Or paste code here. To paste several files, start each with a line like // file: deal-list.tsx" value={pasted} onChange={e => setPasted(e.target.value)} />
@@ -93,15 +101,7 @@ export function Standards({ project, setProject, notify, save }: Props) {
       <div className="lab-actions"><button className="button accent" onClick={add}>Save standard</button></div>
     </details>
 
-    <details className="lab-group"><summary>Profiles</summary>
-      <p>A profile is a saved set of standards for a type of project. Apply one when you start something new.</p>
-      <label htmlFor="profile">Profile</label>
-      <select id="profile" value={profile.id} onChange={e => setProfileId(e.target.value)}>{profiles.map(p => <option key={p.id} value={p.id}>{p.name} ({p.standards.length})</option>)}</select>
-      <div className="lab-actions"><button className="button accent" onClick={applyProfile}>Apply to this project</button></div>
-      <div className="lab-row"><input className="lab-input" aria-label="Profile name" placeholder="Name for the current standards" value={profileName} onChange={e => setProfileName(e.target.value)} /><button className="button outline" onClick={saveProfile}>Save as profile</button></div>
-    </details>
-
-    <details className="lab-group"><summary>Inject into a task</summary>
+    <details className="lab-group" open={standards.length > 0}><summary>Use standards in a task</summary>
       <p>Describe the task. ProdOps picks the standards whose descriptions fit; paste the result into any agent, spec or skill.</p>
       <textarea className="lab-text" aria-label="Task" rows={3} placeholder="e.g. Add a search box to the bookings list" value={task} onChange={e => { setTask(e.target.value); setChosen(null) }} />
       {standards.length > 0 && <div className="lab-chips">{standards.map(s => <label key={s.slug} className="check"><input type="checkbox" checked={selection.some(x => x.slug === s.slug)} onChange={e => setChosen((chosen ?? suggested.map(x => x.slug)).filter(x => x !== s.slug).concat(e.target.checked ? [s.slug] : []))} /> {s.name}</label>)}</div>}

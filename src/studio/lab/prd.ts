@@ -10,10 +10,19 @@ import { PLATFORMS, type Platform } from './agentpack'
 import { extractRequirements, keywords } from './readiness'
 import { injectMarkdown, listStandards, suggestStandards } from './standards'
 
-export const SCOPE_PATH = 'specs/business/requirements/scope.md'
+import { SCOPE_PATH } from './paths'
+export { SCOPE_PATH }
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'item'
-const title = (text: string) => { const t = text.split(/[:—–]|\. /)[0].trim(); return (t.length > 64 ? `${t.slice(0, 61).trim()}…` : t) || text.slice(0, 64) }
+const slug = (s: string) => {
+  const full = s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  if (full.length <= 32) return full || 'item'
+  const cut = full.slice(0, 32); return (cut.includes('-') && full[32] !== '-' ? cut.slice(0, cut.lastIndexOf('-')) : cut) || 'item'
+}
+const title = (text: string) => {
+  const t = text.split(/[:—–]|\. /)[0].trim() || text.trim()
+  if (t.length <= 48) return t
+  const cut = t.slice(0, 48); return `${cut.slice(0, cut.lastIndexOf(' ') > 20 ? cut.lastIndexOf(' ') : 48).trim()}…`
+}
 
 export interface Feature { name: string; text: string; inScope: string[]; outScope: string[] }
 export interface Scope { inScope: string[]; outScope: string[]; features: Feature[] }

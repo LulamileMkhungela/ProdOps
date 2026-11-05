@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Lab is now a **guided build**: an 8-step Guide with a "Next" pill in the header, left-hand steps, per-role drafting coverage, an editable scope, "Fix" buttons on readiness checks and a "mark reviewed" button for stale work. Walked end to end in a headless Chrome against the static build.
+- Scope is derived from the compiled product sections, so milestone folders have readable names, and is stored at `specs/business/scope/scope.md`. Standards moved to `specs/development/code-standards/` so neither collides with, or reopens, a workflow step.
+- Fixed: starter example templates counted as a finished draft; the brief-length rule differed between the guide and readiness; static preview hid server-only controls.
+
 - Lab: **Standards** (discover, index, inject, profiles), **Design system** page with anti-drift rules, **PRD & milestones** with scope lists, prompts and logs, and a **Decisions** guide. The agent pack now carries all of them and replaces the generic milestone prompts with the plan.
 - Readiness gained checks for out-of-scope, standards and design-system documentation.
 

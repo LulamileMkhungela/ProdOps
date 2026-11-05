@@ -415,10 +415,10 @@ const checks = [
     const out = renderToString(<StoreProvider><App /></StoreProvider>)
     return (
       out.includes('lz-side-back') &&
-      out.includes('Back to the ProdOps site') &&
+      out.includes('Open the role workspace') &&
       // and again in the brand row, which is on screen at every width
       out.includes('lz-brand-site') &&
-      /href="\/"/.test(out)
+      /href="\.?\/"/.test(out)
     )
   })()],
 

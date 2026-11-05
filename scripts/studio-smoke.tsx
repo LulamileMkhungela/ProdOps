@@ -103,6 +103,8 @@ try {
   assert.doesNotMatch(win.localStorage.getItem('prodops.role-studio.projects.v2')!,/sk-ant-valid-test-key|figma-valid-token-123/)
 
   await clickRole('Development'); await goStep('Implementation starter')
+  await input(win.document.querySelector('input[placeholder="https://github.com/owner/project"]')!,'https://github.com/example/project'); await click('Import file')
+  assert.match(win.document.body.textContent!,/Public file imported as a reference/)
   await newFile('solution/index.html')
   await input(win.document.querySelector('textarea[aria-label="Edit solution/index.html"]')!, '<!doctype html><html><head><link rel="stylesheet" href="styles.css"></head><body><h1>Delivery overview</h1></body></html>')
   await newFile('solution/app.js')
@@ -136,14 +138,14 @@ try {
   await clickRole('Quality assurance'); assert.doesNotMatch(roleText(),/solution\/|design-tokens/)
   await clickRole('Delivery & operations'); assert.doesNotMatch(roleText(),/solution\/|design-tokens/)
   await clickRole('Business analysis'); await click('Next: Discovery'); assert.match(win.document.querySelector('.ide-stepbar')!.textContent!,/Step 2 of 7: Discovery & stakeholders/); await click('Back'); assert.match(win.document.querySelector('.ide-stepbar')!.textContent!,/Step 1 of 7: Vision & outcomes/)
-  assert.ok((win.document.querySelector('.ide-stepbar button') as HTMLButtonElement).disabled,'Back is off on the very first step')
+  assert.ok(Array.from(win.document.querySelectorAll('.ide-stepbar button')).every(b => !/^\s*Back/.test(b.textContent ?? '')),'Back is hidden on the very first step')
   assert.match(win.document.querySelector('.process-nav button.active')!.textContent!,/Vision & outcomes/,'a role opens on its first step')
 
   const newButton=win.document.querySelector('button[aria-label="New project"]') as HTMLButtonElement
   await act(async()=>{newButton.click();await new Promise(r=>setTimeout(r,0))})
   assert.match((win.document.querySelector('textarea[aria-label="Your brief"]') as HTMLTextAreaElement).placeholder,/What are you building/)
   assert.doesNotMatch(win.document.body.textContent!,/Use example template/);await click('Clear the brief')
-  await input(win.document.querySelector('#project-name')!,'First project');await select('#project-mode','existing')
+  await input(win.document.querySelector('#project-name')!,'First project');assert.doesNotMatch(win.document.body.textContent!,/Type of work/)
   await input(win.document.querySelector('textarea[aria-label="Your brief"]')!,'A service for small teams to manage their work and coordinate projects.')
   await click('Done');assert.match(win.document.querySelector('.ide-crumbs')!.textContent!,/DONE/)
   await goStep('Requirements & scope'); await newFile('specs/business/requirements/functional-requirements.md')
@@ -163,10 +165,10 @@ try {
   const referenceInput=win.document.querySelector('input[accept^=".pdf,"]')! as HTMLInputElement
   Object.defineProperty(referenceInput,'files',{configurable:true,value:[new File([new Uint8Array([1,2,3])],'reference.png',{type:'image/png'})]})
   await act(async()=>{referenceInput.dispatchEvent(new win.Event('change',{bubbles:true}));await new Promise(r=>setTimeout(r,50))})
-  await input(win.document.querySelector('input[placeholder="https://github.com/owner/project"]')!,'https://github.com/example/project'); await click('Import file')
+  assert.equal(win.document.querySelector('input[placeholder="https://github.com/owner/project"]'),null,'no GitHub import on a business step')
   await click('Draft with AI');assert.match(win.document.body.textContent!, /Who will use this product\?/)
   await input(win.document.querySelector('#clarifying-answer')!,'Small teams.');await click('Send answer')
-  assert.match(request.answer,/Small teams/);assert.match(request.context,/Existing system architecture/);assert.match(request.context,/Use the existing design system/);assert.equal(request.images[0],'data:image/png;base64,AQID')
+  assert.match(request.answer,/Small teams/);assert.match(request.context,/Use the existing design system/);assert.equal(request.images[0],'data:image/png;base64,AQID')
   await click('Done');await clickRole('Design');assert.equal((win.document.querySelector('#role-context') as HTMLTextAreaElement).value,'Use the existing design system.')
   await select('#target-framework','Angular')
   const componentInput=win.document.querySelector('input[accept^=".pdf,"]')! as HTMLInputElement
@@ -176,6 +178,8 @@ try {
   await click('Draft with AI'); await act(async()=>{await new Promise(r=>setTimeout(r,80))})
   assert.equal(figmaRequests,2); assert.equal(figmaHeaders['X-ProdOps-Figma-Token'],'figma-valid-token-123');assert.equal(aiHeaders['X-ProdOps-Claude-Key'],'sk-ant-valid-test-key');assert.equal(aiHeaders['X-ProdOps-Figma-Token'],undefined); assert.match(request.context,/Login frame/); assert.match(request.context,/button.component.scss/); assert.match(request.context,/ButtonComponent/); assert.match(request.instruction,/Angular/);assert.match(request.context,/# The PRD/)
   await clickRole('Development'); await goStep('Implementation starter')
+  await input(win.document.querySelector('input[placeholder="https://github.com/owner/project"]')!,'https://github.com/example/project'); await click('Import file')
+  assert.match(win.document.body.textContent!,/Public file imported as a reference/)
   const codeImport=win.document.querySelector('input[aria-label="Import files"]') as HTMLInputElement
   Object.defineProperty(codeImport,'files',{configurable:true,value:[new File(['export class ImportedComponent {}'],'imported.component.ts',{type:'text/plain'}),new File(['<h1>Imported screen</h1>'],'another.html',{type:'text/html'})]})
   await act(async()=>{codeImport.dispatchEvent(new win.Event('change',{bubbles:true}));await new Promise(r=>setTimeout(r,60))})

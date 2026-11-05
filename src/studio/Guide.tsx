@@ -1,5 +1,5 @@
 /** One guide behind the ? button: this role, step by step with a video, or the whole project at a glance. */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CheckCircle2, Circle, ExternalLink, PlayCircle, X } from 'lucide-react'
 import { asset } from './api'
 import { roleHelp, stepLine } from './plain'
@@ -20,6 +20,11 @@ const ROLES: Role[] = ['business', 'design', 'development', 'quality', 'delivery
 
 export function Guide({ role, stepId, project, onGo, onExample, onWorkspaceGuide, onClose }: Props) {
   const [tab, setTab] = useState<'role' | 'project'>('role')
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
   const help = roleHelp[role]
   const steps = workflows[role]
   const status = (r: Role, id: string) => project.stepDecisions[`${r}/${id}`]?.status ?? 'not_started'
@@ -78,14 +83,14 @@ export function Guide({ role, stepId, project, onGo, onExample, onWorkspaceGuide
             </li>
           })}
         </ol>
-        {allDone && <p className="guide-done-note"><CheckCircle2 size={14}/> Everything is done. Download the project from the last step.</p>}
+        {allDone && <p className="guide-done-note"><CheckCircle2 size={14}/> Everything is done. Open Project options and choose Save a copy.</p>}
       </>}
 
       <div className="guide-foot">
         <div className="guide-links">
           <button onClick={onExample}>See a finished example</button>
           <button onClick={onWorkspaceGuide}>Workspace review</button>
-          <a href="https://90n.ai/resources" target="_blank" rel="noopener noreferrer">Resources <ExternalLink size={11}/></a>
+          <a href="https://90n.ai/resources" target="_blank" rel="noopener noreferrer">Resources (paid) <ExternalLink size={11}/></a>
         </div>
         <button className="button accent small" onClick={onClose}>Close</button>
       </div>

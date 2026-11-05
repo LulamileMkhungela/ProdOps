@@ -1,7 +1,7 @@
 /** Role-based workspace orchestration: project history, handoffs, editing, preview and export. */
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode, type Dispatch, type SetStateAction } from 'react'
 import JSZip from 'jszip'
-import { ArrowDownToLine, ArrowLeft, ArrowRight, Bot, Check, ChevronDown, ChevronRight, CircleAlert, CircleHelp, Code2, Columns2, FileCode2, FilePlus, FileText, FolderPlus, Folder, LayoutGrid, Library, ListPlus, LoaderCircle, LockKeyhole, Menu, MoreHorizontal, PanelBottom, PanelLeft, PanelRight, Paperclip, PenTool, Pencil, Plus, TriangleAlert, Upload, Users, X, Trash2, CheckCircle2 } from 'lucide-react'
+import { ArrowDownToLine, ArrowLeft, ArrowRight, Bot, Check, ChevronDown, ChevronRight, CircleAlert, CircleHelp, Code2, Columns2, FileCode2, FilePlus, FileText, FolderPlus, Folder, LayoutGrid, Library, ListPlus, LoaderCircle, LockKeyhole, Menu, MoreHorizontal, PanelBottom, PanelLeft, PanelRight, Paperclip, PenTool, Pencil, Plus, TriangleAlert, Users, X, Trash2, CheckCircle2 } from 'lucide-react'
 import { applyGenerated, contextFor, fileName, isSafeFile, readProject, reconcileStepChanges, roleOf, stepName, updateFile, type FileItem, type Role, type StepStatus, type StudioProject } from './model'
 import { loadInstallFiles } from './skills'
 import { apiFetch, NO_SERVER_MESSAGE, STATIC_HOST } from './api'
@@ -20,7 +20,7 @@ import { DesignEditor } from './DesignEditor'
 import { addFigmaReference, fetchFigmaReference } from './figma'
 import { findFigmaLink, parseFigmaLink } from './figma-link'
 import { staticPreview } from './static-preview'
-import { outlineFiles } from './templates'
+import { deliverableFiles, deliverablesFor } from './deliverables'
 import { loadExample } from './example'
 import { Connections, type ClaudeConnection, type FigmaConnection } from './Connections'
 import { HISTORY_KEY, LEGACY_KEY, blankProject, loadHistory, makeEntry } from './history'
@@ -118,15 +118,28 @@ export function Studio() {
   const [newFolder, setNewFolder] = useState('')
   const [folderBase, setFolderBase] = useState('')
   const [saved, setSaved] = useState(true)
-  const [agentOpen, setAgentOpen] = useState(() => typeof window === 'undefined' || (window.innerWidth >= 1280 && window.innerHeight >= 760))
+  // The helper is a drawer you open when you want it, so it never narrows the editor.
+  const [agentOpen, setAgentOpen] = useState(false)
   const [sideHidden, setSideHidden] = useState(false)
-  const [panelOpen, setPanelOpen] = useState(() => typeof window === 'undefined' || window.innerHeight >= 860)
+  const [panelOpen, setPanelOpen] = useState(false)
   const [panelTab, setPanelTab] = useState<'review' | 'context' | 'problems' | 'output'>('review')
   const [openTabs, setOpenTabs] = useState<string[]>([])
   const [outputLog, setOutputLog] = useState<{ at: string; text: string }[]>([])
   const [view, setView] = useState<'role' | 'resources'>('role')
   const [guideOpen, setGuideOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  // Any open popup closes when you click away from it, or press Esc.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDown = (event: PointerEvent) => {
+      const node = event.target as HTMLElement | null
+      if (!node?.closest?.('.ide-project-menu')) setMenuOpen(false)
+    }
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setMenuOpen(false) }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [menuOpen])
   const [split, setSplit] = useState<string | null>(null)
   const [renamingStep, setRenamingStep] = useState('')
   const [stepDraft, setStepDraft] = useState('')
@@ -156,8 +169,14 @@ export function Studio() {
   const stepBase = role === 'design' && stage.id === 'system' ? 'design/' : role === 'development' && stage.id === 'implementation' ? 'solution/' : stepPrefix
   const title = (item: { id: string; label: string }) => stepName(project, role, item.id, item.label)
   const hasTokens = project.files.some(f => f.path === 'design/design-tokens.json')
+  // A side-by-side view needs the width: put the helper away while it is open.
+  useEffect(() => {
+    if (split !== null && typeof window !== 'undefined' && window.innerWidth < 1600) setAgentOpen(false)
+  }, [split])
+  const stepDeliverables = deliverablesFor(role, stage.id, stepPrefix, title(stage), stage.purpose)
+  const missingDeliverables = stepDeliverables.filter(item => !project.files.some(file => file.path === item.path))
   const hasStepContent = Boolean((role === 'business' && stage.id === 'vision' && project.spec.trim()) || visibleFiles(project.files).some(f => f.path.startsWith(stepPrefix)) || (role === 'design' && stage.id === 'system' && hasTokens))
-  const projectStarted = Boolean(project.spec.trim() || visibleFiles(project.files).length)
+  const projectStarted = Boolean(project.spec.trim() || visibleFiles(project.files).some(file => file.content.trim().length > 0))
   const stepEntries = useMemo(() => {
     const own = buildEntries(project.files, stepPrefix)
     const extra = extraBases(role, stage.id).flatMap((base): TreeEntry[] => { const inside = project.files.filter(f => f.path.startsWith(base)); return inside.length ? [{ kind: 'folder', name: base.replace(/\/$/, ''), path: base.replace(/\/$/, ''), files: inside, children: buildEntries(inside, base) }] : [] })
@@ -215,6 +234,7 @@ export function Studio() {
   }
   function goBack() { if (backTarget) goTo(backTarget.role, backTarget.step) }
   function setDecision(status: StepStatus) {
+    if (status === 'approved' && waitingNow) { setMessage(`Finish “${stepName(project, waitingNow.role, waitingNow.step, workflows[waitingNow.role].find(s => s.id === waitingNow.step)?.label ?? waitingNow.step)}” first, or choose Continue without it above.`); return }
     if (status === 'approved' && !hasStepContent) { setMessage('Add a file or write your brief first, then mark the step done.'); return }
     setProject(p => ({ ...p, stepDecisions: { ...p.stepDecisions, [answerKey]: { status, note: p.stepDecisions[answerKey]?.note ?? '' } } }))
     setMessage(status === 'rejected' ? 'Rejected. Fix the work, then review it again.' : status === 'revisit' ? 'Saved. Come back to it later; you can go on.' : status === 'approved' ? (nextStep ? `Done. Next: ${title(nextStep)}.` : 'Done. Go on to the next role.') : 'Marked as in progress.')
@@ -368,9 +388,9 @@ export function Studio() {
   }
   function createStepTemplates() {
     const prefix = specPrefix(role, stage.id)
-    const candidates = outlineFiles(prefix, title(stage), stage.purpose).filter(f => !project.files.some(existing => existing.path === f.path))
-    if (!candidates.length) { setSelected(prefix + 'shape.md'); setMessage('The step already has an outline or draft; your files were kept.'); return }
-    try { setProject(applyGenerated(project, role, candidates)); setSelected(project.files.some(f => f.path === prefix + 'shape.md') ? prefix + 'shape.md' : candidates[0].path); setMessage('Outline added. Write under each heading.') } catch { setMessage('Could not add templates: the project may have reached its file limit.') }
+    const candidates = deliverableFiles(role, stage.id, prefix, title(stage), stage.purpose).filter(f => !project.files.some(existing => existing.path === f.path))
+    if (!candidates.length) { setMessage('This step already has its files. Pick one on the left, or add a new file.'); return }
+    try { setProject(applyGenerated(project, role, candidates)); setSelected(candidates[0].path); setSideHidden(false); setMessage('Files added for this step. Write under each heading.') } catch { setMessage('Could not add the files: the project may have reached its file limit.') }
   }
   function addFile() {
     if (project.files.length >= 300) { setMessage('The project has reached its file limit.'); return }
@@ -454,7 +474,7 @@ export function Studio() {
             <div className="ide-menu" role="menu">
               <button role="menuitem" onClick={() => { setMenuOpen(false); nameRef.current?.focus(); nameRef.current?.select() }}>Rename project<small>Type the new name at the top</small></button>
               <button role="menuitem" onClick={() => { setMenuOpen(false); setShowExport(true) }}>Save a copy<small>Download the whole project as a ZIP</small></button>
-              <label role="menuitem" className="import-label">Open a saved copy<input type="file" accept=".zip,application/zip" onChange={e => { const file = e.target.files?.[0]; setMenuOpen(false); if (file) void importZip(file); e.target.value = '' }}/></label>
+              <label role="menuitem" className="import-label">Load a saved copy<small>Restore a project file you saved earlier</small><input type="file" accept=".zip,application/zip" onChange={e => { const file = e.target.files?.[0]; setMenuOpen(false); if (file) void importZip(file); e.target.value = '' }}/></label>
               <hr/>
               <button role="menuitem" className="danger" onClick={deleteProject}>Delete project<small>Removes it from this browser</small></button>
             </div></>}
@@ -503,7 +523,7 @@ export function Studio() {
               <button onClick={() => startNewFile()} title="New file in this step"><FilePlus size={14}/> File</button>
               <button onClick={() => startNewFolder()} title="New folder in this step"><FolderPlus size={14}/> Folder</button>
               <button aria-label="Add step outline" onClick={createStepTemplates} title="Add headings for this step"><ListPlus size={14}/> Outline</button>
-              <label className="tb-btn" title="Import files from your computer"><Upload size={14}/> Import<input type="file" multiple hidden aria-label="Import files" onChange={e => { if (e.target.files) void importFiles(e.target.files); e.target.value = '' }}/></label>
+              <label className="tb-btn" title="Import files from your computer"><Paperclip size={14}/> Attach<input type="file" multiple hidden aria-label="Import files" onChange={e => { if (e.target.files) void importFiles(e.target.files); e.target.value = '' }}/></label>
             </div>
             {creating && <div className="create-file" id="new-file-form"><input aria-label="New file path" placeholder="notes.md" value={newPath} autoFocus onChange={e => setNewPath(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addFile(); if (e.key === 'Escape') setCreating(false) }}/><button className="button outline small" onClick={addFile}>Add</button><button className="plain-icon" aria-label="Cancel" onClick={() => setCreating(false)}><X size={15}/></button></div>}
             {creatingFolder && <div className="create-file" id="new-folder-form"><input aria-label="New folder name" placeholder="Folder name" value={newFolder} autoFocus onChange={e => setNewFolder(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addFolder(); if (e.key === 'Escape') setCreatingFolder(false) }}/><button className="button outline small" onClick={addFolder}>Add</button><button className="plain-icon" aria-label="Cancel" onClick={() => setCreatingFolder(false)}><X size={15}/></button></div>}
@@ -528,7 +548,7 @@ export function Studio() {
         <div className="ide-crumbs"><span>{roles.find(r => r.id === role)?.label}</span><ChevronRight size={12}/><span>{title(stage)}</span>{selected && <><ChevronRight size={12}/><b>{selected === 'business/original-spec.md' ? 'Your brief' : fileName(project, selected)}</b></>}<Tag tone={stepDone ? 'green' : 'peach'}>{statusLabel[decision.status].toUpperCase()}</Tag></div>
         {waitingNow && <div className="waiting-bar">
           <CircleAlert size={15}/>
-          <p><b>Waiting on earlier roles</b> · {roleHelp[waitingNow.role].name} “{stepName(project, waitingNow.role, waitingNow.step, workflows[waitingNow.role].find(s => s.id === waitingNow.step)?.label ?? waitingNow.step)}” is {statusLabel[waitingNow.status].toLowerCase()}{waiting.length > 1 ? ` · plus ${waiting.length - 1} more` : ''}. You can finish your part now.</p>
+          <p><b>Waiting on earlier roles</b> · {roleHelp[waitingNow.role].name} “{stepName(project, waitingNow.role, waitingNow.step, workflows[waitingNow.role].find(s => s.id === waitingNow.step)?.label ?? waitingNow.step)}” is {statusLabel[waitingNow.status].toLowerCase()}{waiting.length > 1 ? ` · plus ${waiting.length - 1} more` : ''}. Mark as done and AI drafting stay locked until it is finished — or continue without it.</p>
           <div className="waiting-actions">
             <button className="button outline small" onClick={() => goTo(waitingNow.role, waitingNow.step)}>Open it</button>
             <button className="button ghost small" onClick={() => setIgnoredWaiting(list => [...list, `${answerKey}:${waitingNow.role}/${waitingNow.step}`])}>Continue without it</button>
@@ -540,20 +560,18 @@ export function Studio() {
             {role === 'design' && stage.id === 'system' && !showDesignEditor && !showWelcome && <div className="start-ds"><span>No colours or text styles yet. Start with a simple set you can edit.</span><button className="button accent small" onClick={startDesignSystem}>Start the design system</button></div>}
             {role === 'design' && stage.id === 'system' && showDesignEditor && <DesignEditor key={activeId} project={project} setProject={setProject}/>}
             {showWelcome && <div className="ide-welcome">
-              <span className="kicker">Step {stepIndex + 1} of {workflows[role].length} · {roleHelp[role].name}</span>
               <h1>{title(stage)}</h1>
               <p>{stepLine(role, stage.id, stage.purpose)}</p>
+              <p className="ide-needs-head">What this step makes</p>
+              <ul className="role-needs">{stepDeliverables.map(item => <li key={item.path}><FileText size={13}/><span>{item.label}</span></li>)}</ul>
               <div className="ide-welcome-actions">
                 {role === 'design' && stage.id === 'system' && <button className="button accent" onClick={startDesignSystem}>Start the design system</button>}
-                <button className={`button ${role === 'design' && stage.id === 'system' ? 'outline' : 'accent'}`} onClick={createStepTemplates}>Add an outline</button>
+                <button className={`button ${role === 'design' && stage.id === 'system' ? 'outline' : 'accent'}`} onClick={createStepTemplates} disabled={!missingDeliverables.length}>{missingDeliverables.length ? `Add ${missingDeliverables.length} file${missingDeliverables.length === 1 ? '' : 's'} for this step` : 'Files already added'}</button>
                 <button className="button outline" onClick={() => startNewFile()}>New file</button>
                 <button className="button outline" onClick={() => setAgentOpen(true)}>Ask the AI helper</button>
               </div>
             </div>}
-            {selected === 'business/original-spec.md' && <>
-              {!project.name.trim() && <div className="start-name"><label htmlFor="start-project-name">Name your project</label><input id="start-project-name" value={project.name} maxLength={120} placeholder="For example: Customer portal" onChange={e => setProject(p => ({ ...p, name: e.target.value }))}/><p>You can change it any time.</p></div>}
-              <div className="project-type"><label htmlFor="project-mode">Type of work</label><select id="project-mode" value={project.mode} onChange={e => setProject(p => ({ ...p, mode: e.target.value === 'existing' ? 'existing' : 'new' }))}><option value="new">New product</option><option value="existing">Existing product or change</option></select></div>
-            </>}
+            {selected === 'business/original-spec.md' && !project.name.trim() && <div className="start-name"><label htmlFor="start-project-name">Name your project</label><input id="start-project-name" value={project.name} maxLength={120} placeholder="For example: Customer portal" onChange={e => setProject(p => ({ ...p, name: e.target.value }))}/><p>You can change it any time.</p></div>}
             {selected && <div className="editor-heading">
               <div>
                 {selected === 'business/original-spec.md'
@@ -570,11 +588,11 @@ export function Studio() {
             </div>}
             {selected === 'business/original-spec.md' && role === 'business' && <div className="template-actions"><button onClick={() => setProject(p => ({ ...p, spec: '', businessApproved: false, designStale: true, developmentStale: true }))}>Clear the brief</button></div>}
             {editorPreview && <div className="editor-preview-toggle"><button onClick={() => setShowEditorPreview(!showEditorPreview)}>{showEditorPreview ? 'Hide live preview' : 'Show live preview'}</button><span>{selectedFile?.path.endsWith('.js') ? 'Shows the related page; scripts are off' : 'Updates as you type · scripts off'}</span></div>}
-            <div className={editorPreview && showEditorPreview ? 'editor-with-preview' : undefined}><div>{selected === 'business/original-spec.md' ? <textarea className="studio-editor spec-editor" aria-label="Your brief" maxLength={30000} placeholder="What are you building, who is it for, and what must it do? A few sentences is enough." value={project.spec} onChange={e => setProject(p => ({ ...p, spec: e.target.value, businessApproved: false, designStale: true, developmentStale: true }))}/> : selectedFile ? <textarea className="studio-editor file-editor" maxLength={50000} aria-label={`Edit ${selectedFile.path}`} value={selectedFile.content} onChange={e => setProject(p => updateFile(p, selectedFile.path, e.target.value))}/> : <div className="editor-empty"><Folder size={22}/><p>Nothing selected yet.</p><span>Pick a file on the left, or add one.</span></div>}</div>{editorPreview && showEditorPreview && <div className="inline-preview"><b>{selectedIsHtml ? `PREVIEW · ${selected.split('/').pop()}` : 'LIVE HTML/CSS PREVIEW'}</b><iframe title="Live HTML and CSS preview" sandbox="" srcDoc={editorPreview}/></div>}</div>
+            <div className={editorPreview && showEditorPreview ? 'editor-with-preview' : undefined}><div>{selected === 'business/original-spec.md' ? <textarea className="studio-editor spec-editor" aria-label="Your brief" maxLength={30000} placeholder="What are you building, who is it for, and what must it do? A few sentences is enough." value={project.spec} onChange={e => setProject(p => ({ ...p, spec: e.target.value, businessApproved: false, designStale: true, developmentStale: true }))}/> : selectedFile ? <textarea className="studio-editor file-editor" maxLength={50000} aria-label={`Edit ${selectedFile.path}`} value={selectedFile.content} onChange={e => setProject(p => updateFile(p, selectedFile.path, e.target.value))}/> : (!showWelcome ? <div className="editor-empty"><Folder size={22}/><p>Nothing selected yet.</p><span>Pick a file on the left, or add one.</span></div> : null)}</div>{editorPreview && showEditorPreview && <div className="inline-preview"><b>{selectedIsHtml ? `PREVIEW · ${selected.split('/').pop()}` : 'LIVE HTML/CSS PREVIEW'}</b><iframe title="Live HTML and CSS preview" sandbox="" srcDoc={editorPreview}/></div>}</div>
             {selectedFile && /\.(ts|tsx|jsx|scss)$/i.test(selectedFile.path) && role === 'development' && <p className="preview-limitation">This file needs a framework compiler or preprocessor; it cannot be rendered here. Open an HTML file for a preview.</p>}
             <details className="attach-box" open={stepRefs.length > 0}>
               <summary><Paperclip size={13}/> Attachments {stepRefs.length > 0 && <em>{stepRefs.length}</em>}</summary>
-              <References project={project} setProject={setProject} role={role} step={stage.id} figmaToken={figma?.token} onFigmaVerified={markFigmaVerified}/>
+              <References project={project} setProject={setProject} role={role} step={stage.id} figmaToken={figma?.token} onFigmaVerified={markFigmaVerified} showFigma={role === 'design'} showGithub={role === 'development'}/>
             </details>
             <div className="editor-footer"><span><span className="saved-dot"/> {saved ? 'Saved in this browser' : 'Could not save — download a copy'}</span><span>{selected === 'business/original-spec.md' ? `${project.spec.length.toLocaleString()} / 30,000 characters` : selectedFile ? `${selectedFile.content.length.toLocaleString()} characters` : ''}</span></div>
           </div>
@@ -596,9 +614,9 @@ export function Studio() {
           </div>}
         </div>
         <div className="ide-stepbar" role="group" aria-label="Step navigation">
-          <button className="button outline small" disabled={!backTarget} onClick={goBack}><ArrowLeft size={14}/> Back</button>
+          {backTarget && <button className="button outline small" onClick={goBack}><ArrowLeft size={14}/> Back</button>}
           <div className="stepbar-mid"><b>Step {stepIndex + 1} of {workflows[role].length}: {title(stage)}</b><span>{hint}</span></div>
-          {stepDone ? <span className="done-chip"><Check size={14}/> Done</span> : <button className="button outline small" onClick={() => setDecision('approved')}><Check size={14}/> Mark as done</button>}
+          {stepDone ? <span className="done-chip"><Check size={14}/> Done</span> : <button className="button outline small" onClick={() => setDecision('approved')} disabled={Boolean(waitingNow)} title={waitingNow ? 'Finish the earlier role item first, or choose Continue without it' : 'Mark this step done'}><Check size={14}/> Mark as done</button>}
           <button className={`button small ${stepDone || !hasStepContent ? 'outline' : 'accent'}`} onClick={goNext}>{nextLabel} <ArrowRight size={14}/></button>
         </div>
         <section className="ide-panel" aria-label="Panel">
@@ -615,7 +633,7 @@ export function Studio() {
               <div className="review-title"><div><h3>{title(stage)}</h3><p>Check your work, then pick an outcome.</p></div></div>
               <label htmlFor="decision-note">Note <span>OPTIONAL</span></label>
               <textarea id="decision-note" maxLength={2000} value={decision.note} placeholder="For example: checked with the team." onChange={e => { const note = e.target.value; setProject(p => ({ ...p, stepDecisions: { ...p.stepDecisions, [answerKey]: { status: p.stepDecisions[answerKey]?.status ?? 'not_started', note } } })) }}/>
-              <div className="decision-actions">{([['approved', 'Done'], ['in_progress', 'In progress'], ['revisit', 'Revisit later'], ['rejected', 'Rejected']] as const).map(([status, label]) => <button key={status} className={decision.status === status ? 'selected' : ''} onClick={() => setDecision(status)}>{label}</button>)}</div>
+              <div className="decision-actions">{([['approved', 'Done'], ['in_progress', 'In progress'], ['revisit', 'Revisit later'], ['rejected', 'Rejected']] as const).map(([status, label]) => <button key={status} className={decision.status === status ? 'selected' : ''} onClick={() => setDecision(status)} disabled={Boolean(waitingNow) && status === 'approved'} title={waitingNow && status === 'approved' ? 'Finish the earlier role item first, or choose Continue without it' : undefined}>{label}</button>)}</div>
             </div></div>
             <div hidden={panelTabNow !== 'context'}>{role !== 'business' && <section className="role-handoff"><div className="handoff-header"><div><span className="small-kicker">FROM BUSINESS ANALYSIS</span><h3>Shared project context</h3></div><Tag>{`VISION: ${(project.stepDecisions['business/vision']?.status ?? 'not_started').replace('_', ' ').toUpperCase()}`}</Tag></div><p className="handoff-copy">{project.spec || 'No shared context yet. Business analysis can add it at Vision & outcomes.'}</p><p className="handoff-hint">These are the current source files, including drafts. Approval belongs to its own step; changes appear here automatically.</p>{handoffPaths.map(path => { const file = project.files.find(f => f.path === path); if (!file) return null; const design = path.startsWith('specs/design/'); return <details className="handoff-document" key={path} open><summary>{path.split('/').pop()?.replace('.md', '').replaceAll('-', ' ')} <span>{(project.stepDecisions[design ? 'design/screens' : 'business/requirements']?.status ?? 'not_started').replace('_', ' ')}</span></summary><pre>{file.content}</pre></details> })}<label htmlFor="role-context">Anything else this role should know <span>OPTIONAL</span></label><textarea id="role-context" maxLength={4000} value={project.answers[`context/${role}`] ?? ''} placeholder="Only if it is missing from the shared context." onChange={e => setProject(p => ({ ...p, answers: { ...p.answers, [`context/${role}`]: e.target.value } }))}/><div className="template-actions"><button onClick={() => setProject(p => ({ ...p, answers: { ...p.answers, [`context/${role}`]: '' } }))}>Clear</button></div></section>}</div>
             <div hidden={panelTabNow !== 'problems'} className="ide-problems">{!projectStarted ? <p>Nothing to check yet. Start writing and ProdOps will point out gaps here.</p> : problems.length ? <ul>{problems.map(c => <li key={c.id} className={c.level}>{c.level === 'fail' ? <CircleAlert size={14}/> : <TriangleAlert size={14}/>}<div><b>{c.title}</b><span>{c.detail}</span></div><em>{c.group}</em></li>)}</ul> : <p>No problems found.</p>}</div>
@@ -633,11 +651,22 @@ export function Studio() {
             <h3>{title(stage)}</h3>
             <p>{stepLine(role, stage.id, stage.purpose)}</p>
             {currentQuestion ? <div className="clarification"><div className="small-kicker">ONE MORE DETAIL</div><label htmlFor="clarifying-answer">{currentQuestion}</label><textarea id="clarifying-answer" maxLength={2000} placeholder="Your answer, or say you are not sure yet…" value={clarificationAnswer} onChange={e => setClarificationAnswer(e.target.value)}/><button className="button accent full" disabled={busy} onClick={answerQuestion}>Send answer <ArrowRight size={14}/></button></div>
-              : <p className="assistant-explain">{STATIC_HOST ? '“Instant draft” writes a starter for this step from your brief. Read it, edit it, then mark the step done.' : 'It asks a question only when it needs more detail.'}</p>}
+              : <p className="assistant-explain">{STATIC_HOST ? 'Two ways to fill this step: the ready-made outline, or write it yourself. Read it, edit it, then mark the step done.' : 'The outline comes from ProdOps. The AI writes from your brief. Both only touch this step.'}</p>}
             {(role === 'design' || role === 'development') && <label className="framework-picker" htmlFor="target-framework">Frontend style<select id="target-framework" value={framework} onChange={e => { const value = e.target.value; setProject(p => ({ ...p, answers: { ...p.answers, 'preferences/stack': value } })) }}><option value="existing">Follow imported components</option><option value="Angular">Angular</option><option value="React">React</option><option value="HTML and CSS">HTML and CSS</option></select></label>}
             {!STATIC_HOST && <><label htmlFor="extra-direction">What do you need? <span>OPTIONAL</span></label><textarea id="extra-direction" maxLength={3600} placeholder="For example: keep it short and use our existing colours." value={instruction} onChange={e => setInstruction(e.target.value)}/><div className="template-actions"><button onClick={() => setInstruction('')}>Clear</button></div></>}
-            {!currentQuestion && <button className={`button ${STATIC_HOST ? 'accent' : 'outline'} full`} onClick={() => void quickDraft()} disabled={busy}>{busy && STATIC_HOST ? <LoaderCircle className="spin" size={16}/> : null} {busy && STATIC_HOST ? 'Drafting…' : 'Instant draft'}</button>}
-            {!currentQuestion && !STATIC_HOST && <button className="button accent full" onClick={() => void generate()} disabled={busy}>{busy ? <LoaderCircle className="spin" size={16}/> : null} {busy ? 'Working…' : 'Draft with AI'}</button>}
+            {!currentQuestion && <div className="ai-choices">
+              {!showWelcome && <div className="ai-choice">
+                <b>Outline, no AI</b>
+                <span>ProdOps adds the files and headings for this step. Works offline.</span>
+                <button className="button outline small full" onClick={createStepTemplates} disabled={busy || !missingDeliverables.length}>{missingDeliverables.length ? `Add ${missingDeliverables.length} file${missingDeliverables.length === 1 ? '' : 's'}` : 'Files already added'}</button>
+              </div>}
+              <div className="ai-choice">
+                <b>{STATIC_HOST ? 'Starter draft, no AI' : 'Write it with AI'}</b>
+                <span>{STATIC_HOST ? 'A short starter for this step from your brief. You write the rest.' : 'The AI writes this step from your brief and files. You can edit everything it writes.'}</span>
+                <button className="button accent small full" onClick={() => void (STATIC_HOST ? quickDraft() : generate())} disabled={busy || (!STATIC_HOST && Boolean(waitingNow))} title={!STATIC_HOST && waitingNow ? 'Finish the earlier role item first, or choose Continue without it' : undefined}>{busy ? <LoaderCircle className="spin" size={16}/> : null} {busy ? 'Working…' : STATIC_HOST ? 'Make a starter' : 'Draft with AI'}</button>
+              </div>
+            </div>}
+            {waitingNow && <p className="ai-locked"><LockKeyhole size={12}/><span>Locked until “{stepName(project, waitingNow.role, waitingNow.step, workflows[waitingNow.role].find(s => s.id === waitingNow.step)?.label ?? waitingNow.step)}” is done, or choose Continue without it above.</span></p>}
             {STATIC_HOST ? <p className="ai-unavailable">{NO_SERVER_MESSAGE}</p> : configured === false && !claude && <p className="ai-unavailable">Connect Claude above with your API key, or keep editing without AI.</p>}
             {!STATIC_HOST && <div className="ai-note"><LockKeyhole size={13}/><span>Drafting sends your brief, project files, skills and this step’s attachments to your AI provider.</span></div>}
           </div>

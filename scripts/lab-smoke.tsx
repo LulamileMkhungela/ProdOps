@@ -29,6 +29,11 @@ async function click(text: string, within: ParentNode = win.document) {
   assert.ok(b, `Missing enabled button: ${text}`)
   await act(async () => { b.click(); await tick() })
 }
+async function clickLabel(label: string) {
+  const b = win.document.querySelector(`button[aria-label="${label}"]`) as HTMLButtonElement | null
+  assert.ok(b && !b.disabled, `Missing enabled button: ${label}`)
+  await act(async () => { b.click(); await tick() })
+}
 async function type(el: Element | null, value: string) {
   assert.ok(el)
   const proto = el.tagName === 'TEXTAREA' ? win.HTMLTextAreaElement.prototype : win.HTMLInputElement.prototype
@@ -42,9 +47,9 @@ try {
   startup() // the studio checks for an optional server on load; everything after this is the Lab
   // Start a blank project, write the brief, then open the Lab from the sidebar.
   await act(async () => { (win.document.querySelector('button[aria-label="New project"]') as HTMLElement).click(); await tick() })
-  await type(win.document.querySelector('textarea[aria-label="Project context"]'), 'A booking app for township barbershops where customers reserve slots, pay a deposit and get reminders. Owners see the day at a glance.')
-  assert.ok(Array.from(win.document.querySelectorAll('a')).some(a => a.getAttribute('href') === './design.html'), 'link to the five-stage flow')
-  await click('Guided build')
+  await type(win.document.querySelector('textarea[aria-label="Your brief"]'), 'A booking app for township barbershops where customers reserve slots, pay a deposit and get reminders. Owners see the day at a glance.')
+  assert.ok(!Array.from(win.document.querySelectorAll('a')).some(a => a.getAttribute('href') === './design.html'), 'no link back to the old five-stage page')
+  await clickLabel('Guide'); await click('Workspace review')
   assert.ok(lab(), 'Lab opens')
   assert.match(lab().textContent!, /Write your brief|Draft the specs/, 'the Guide says what to do next')
   await nav('Readiness')
@@ -66,15 +71,15 @@ try {
   assert.match(win.localStorage.getItem('prodops.role-studio.projects.v2') ?? '', /Local template draft/, 'drafted files are labelled')
 
   // Save a version, edit, compare, download an iteration brief
-  await click('Guided build')
+  await clickLabel('Guide'); await click('Workspace review')
   await nav('Versions')
   await type(lab().querySelector('input[aria-label="Version name"]'), 'first pass')
   await click('Save version', lab())
   assert.match(lab().textContent!, /first pass/)
   assert.ok(win.localStorage.getItem('prodops.lab.versions.v1'), 'versions stored in this browser')
   await act(async () => { (lab().querySelector('[aria-label="Close Lab"]') as HTMLElement).click(); await tick() })
-  await type(win.document.querySelector('textarea[aria-label="Project context"]'), 'A booking app for township barbershops where customers reserve slots, pay a deposit and get reminders. Owners see the day at a glance. Add loyalty points.')
-  await click('Guided build')
+  await type(win.document.querySelector('textarea[aria-label="Your brief"]'), 'A booking app for township barbershops where customers reserve slots, pay a deposit and get reminders. Owners see the day at a glance. Add loyalty points.')
+  await clickLabel('Guide'); await click('Workspace review')
   await nav('Versions')
   assert.match(lab().textContent!, /brief changed/)
   await click('Download iteration brief', lab())

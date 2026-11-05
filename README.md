@@ -85,6 +85,10 @@ Open **Guided build** in the sidebar (the header pill shows the next step, e.g. 
 - **Decisions** is a written guide to common trade-offs (client or server search, fixed or configurable fields, delete or archive, and more).
 - **Agent pack** downloads one zip with `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor rules, Copilot instructions, milestone prompts and your specs. Choose web, Expo or both.
 
+## Worked example and video
+
+`examples/clinic-front-desk/` is one complete project: every spec file, the design system, the PRD and milestone prompts, and a finished application you can run. In the app choose **Open the worked example** (left column, under *Your projects*), then Development, then **Run current preview**. The example is opt-in, so a new project still starts empty. Its README says what was generated and what was written by hand. `docs/walkthrough/prodops-walkthrough.mp4` shows every click from an empty app to the running product.
+
 ## Skills
 
 `.agents/skills/` holds the installed skills and `.agents/commands/` the slash commands, listed in [.agents/UPSTREAM.md](.agents/UPSTREAM.md). The `bm-*` skills (PRD creator, design system, skill builder, favicon creator), the agentcanon skills, `frontend-design` and the Agent OS and Design OS commands are copied unchanged from the open-source (MIT) repositories at github.com/buildermethods, with their licences and commit versions recorded. Five `prodops-*` skills are original to ProdOps (one per role, plus how to build from a pack). `.claude/skills` links to the same folder, and `CLAUDE.md` links to `AGENTS.md`. Every Markdown file from the five buildermethods repositories (README, AGENTS, CLAUDE, CHANGELOG, the Design OS docs, the Agent OS profile and community files) is kept unchanged under `.agents/upstream/` as reference; their own AGENTS.md and CLAUDE.md describe how to work inside those repositories, so they are not written to the root of your project.

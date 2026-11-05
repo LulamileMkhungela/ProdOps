@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "name": "Clinic front desk (worked example)",
+  "mode": "new",
+  "stepDecisions": {
+    "business/vision": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "business/discovery": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "business/users": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "business/requirements": {
+      "status": "approved",
+      "note": ""
+    },
+    "business/data": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "business/roadmap": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "business/handoff": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "design/research": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "design/personas": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "design/journeys": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "design/architecture": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "design/system": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "design/screens": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "design/validation": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "design/handoff": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "development/standards": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "development/architecture": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "development/specification": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "development/database": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "development/tasks": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "development/implementation": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "development/verification": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "development/handoff": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "quality/strategy": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "quality/cases": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "quality/regression": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "quality/execution": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "quality/release": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "delivery/planning": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "delivery/risks": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "delivery/release": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "delivery/operations": {
+      "status": "in_progress",
+      "note": ""
+    },
+    "delivery/measure": {
+      "status": "in_progress",
+      "note": ""
+    }
+  },
+  "spec": "A front-desk tool for a small physiotherapy clinic. The receptionist registers patients, books appointments without double-booking a therapist, and therapists write short visit notes. The clinic owner sees the day at a glance and no-shows drop.",
+  "businessApproved": false,
+  "designStale": false,
+  "developmentStale": false,
+  "answers": {}
+}

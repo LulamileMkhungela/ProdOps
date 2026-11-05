@@ -1,0 +1,65 @@
+# Clinic front desk (worked example) — instructions for coding agents
+
+This file is read by Claude Code, Codex, Cursor, Gemini CLI, Copilot and any tool that supports `AGENTS.md`.
+
+## Source of truth
+Everything about *what* to build is in `specs/`. Read, in this order:
+1. `brief.md` — the shared brief
+2. `specs/business/requirements/` — business and functional requirements
+3. `specs/design/` and `design/` — design requirements and tokens
+4. `specs/development/` — architecture, data and tasks
+5. `specs/quality/` — the cases your tests must cover
+
+Specs marked "Local template draft" were generated from a template and are unverified. Ask before relying on them.
+Approved steps: business/requirements
+
+## How to work
+- Plan before coding. Propose milestones and ask about anything the specs leave open.
+- One milestone at a time. Write tests first for the success path **and** the failure path.
+- Do not invent requirements. If a spec is silent, ask.
+- Use the named design tokens; do not hard-code colours, sizes or fonts.
+- Keep `READINESS.md` and `TRACEABILITY.md` in mind: every requirement should end up with a screen and a test.
+
+## When something is unclear
+Ask, and explain the trade-offs of each option in plain language (cost, risk, what it rules out) before recommending one. Typical questions: where search and sorting happen, whether fields are fixed or configurable, who can see what, whether deleted things are kept.
+
+## Design system rules
+
+The design system is documented in `design/design-system.md` (humans: `design/design-system.html`).
+
+- Before writing any UI, read it and reuse the matching component. If none fits, ask: “There is no component for X. Add it to the design system so it stays consistent, or do a one-off?” Default to proposing the design-system addition, then use it.
+- Refer to colours, radius and type by token name. Never write a raw hex value, a raw font size or a one-off radius in a component.
+- Use plain semantic elements for text (`h1`–`h3`, `p`, `label`, `button`) and put typography in the base styles. Do not restyle each heading with a stack of utility classes.
+- One primary button per view. Every input has a visible label. Errors appear beside the field, in words.
+- Every interactive element has a visible focus state and meets 4.5:1 text contrast.
+- Never reach for a new colour, shadow or spacing value to fix one screen. Change the token and every screen follows.
+- When asked for UI, say which design-system component you used.
+
+## Standards to follow
+
+The index is `specs/development/code-standards/index.yaml`: read it first, and open a standard only when its description fits the task.
+
+Read these before writing code. They are the source of truth.
+
+- @specs/development/code-standards/design-system-first.md — Check the design system before writing any markup or styles; reuse its components for buttons, forms, listings and modals.
+- @specs/development/code-standards/semantic-html-for-text.md — Use plain semantic elements (h1, h2, p, label) and the base styles; do not restyle each heading with ad hoc classes.
+- @specs/development/code-standards/tokens-not-raw-values.md — Use named colour, spacing, radius and type tokens; never raw hex values or pixel sizes in components.
+
+## Target platform
+- Build a responsive React web app. Use the design tokens as CSS variables.
+- Support light and dark themes if the tokens define both.
+
+## Verify your work
+- After a significant feature, add tests for it and run the whole suite; it must pass before you report the task done.
+- For any UI change, open it in a real browser and walk the user paths end to end. Check desktop and phone widths, and keep screenshots out of the repository (for example in `tmp/screenshots/`).
+- Run your verification server on a different port from the one the human uses to browse, so you never take over their page.
+
+## Definition of done
+- Behaviour matches the spec and passes its tests
+- Loading, empty, error and success states exist
+- Accessible: contrast 4.5:1, keyboard or screen-reader reachable, labelled inputs
+- No placeholder text or lorem ipsum
+- Notes added for anything that deviates from the spec
+
+## Iterating
+When requirements change, use `prompts/iterate.md` with an iteration brief. Change only what the brief lists.

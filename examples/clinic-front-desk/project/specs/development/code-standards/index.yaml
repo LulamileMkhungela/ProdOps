@@ -1,0 +1,11 @@
+# Standards index. Read this first; open a standard only when its description fits the task.
+standards:
+  - file: "design-system-first.md"
+    name: "Design system first"
+    description: "Check the design system before writing any markup or styles; reuse its components for buttons, forms, listings and modals."
+  - file: "semantic-html-for-text.md"
+    name: "Semantic HTML for text"
+    description: "Use plain semantic elements (h1, h2, p, label) and the base styles; do not restyle each heading with ad hoc classes."
+  - file: "tokens-not-raw-values.md"
+    name: "Tokens, not raw values"
+    description: "Use named colour, spacing, radius and type tokens; never raw hex values or pixel sizes in components."

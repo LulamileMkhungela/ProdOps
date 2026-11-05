@@ -165,5 +165,13 @@ try {
   await click('Choose what to download');await click('Application code only');await act(async()=>{await new Promise(r=>setTimeout(r,150))})
   const codeZip=await JSZip.loadAsync(await exported!.arrayBuffer());assert.ok(codeZip.file('example.js'));assert.equal(codeZip.file('.prodops/project.json'),null)
   await click('Disconnect Claude'); await click('Disconnect Figma'); assert.match(win.document.body.textContent!,/Claude disconnected from this tab/);assert.match(win.document.body.textContent!,/Figma disconnected from this tab/)
-  console.log('Studio smoke passed: role workbenches, handoffs, outlines, tokens, previews, imports and exports.')
+  await click('Open the worked example'); await act(async()=>{await new Promise(r=>setTimeout(r,1200))})
+  assert.match(win.document.body.textContent!,/Worked example opened/)
+  assert.ok([...win.document.querySelectorAll('#project-picker option')].some(o=>o.textContent==='Clinic front desk (worked example)'),'the example is a project in the picker')
+  await click('Open the worked example'); await act(async()=>{await new Promise(r=>setTimeout(r,500))})
+  assert.equal([...win.document.querySelectorAll('#project-picker option')].filter(o=>o.textContent==='Clinic front desk (worked example)').length,1,'opening it twice does not duplicate it')
+  await click('Run current preview'); await act(async()=>{await new Promise(r=>setTimeout(r,300))})
+  const runFrame=win.document.querySelector('iframe[title="Interactive application preview"]') as HTMLIFrameElement
+  assert.ok(runFrame.srcdoc.includes('window.ClinicDesk')&&runFrame.srcdoc.includes('--color-primary: #c2410c'),'the finished application runs from the example files')
+  console.log('Studio smoke passed: role workbenches, handoffs, outlines, tokens, previews, imports, exports and the worked example.')
 } finally { await act(async()=>root.unmount()); await vite.close(); globalThis.fetch=oldFetch }

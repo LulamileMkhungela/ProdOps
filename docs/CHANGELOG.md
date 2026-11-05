@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Worked example `examples/clinic-front-desk/`: a full project from brief to a running application (specs for all five roles, design tokens and system, standards, PRD, six milestone prompts and logs, and a finished clinic front-desk app). Opt-in: **Open the worked example** under *Your projects*; new projects still start empty. `npm run test:example` tests the application, the project and that the hand-off pack is current; `npm run example:build` refreshes the pack.
+- Video walkthrough `docs/walkthrough/prodops-walkthrough.mp4`: every click from an empty app to the running product, recorded from the static build.
+- Found while recording: the preview frame blocks form submission, so a form relying on a submit button would silently do nothing there. The example submits from its buttons and the Enter key, and a test guards it.
+
 - All Markdown files from the five buildermethods repositories (README, AGENTS, CLAUDE, CHANGELOG, docs, profile, community files) are installed unchanged under `.agents/upstream/`, with licences, and travel in every pack and project download. Root `CLAUDE.md` now links to `AGENTS.md`.
 
 - Skills installed: the four `bm-*` skills, the two agentcanon skills, `frontend-design` and the Agent OS and Design OS commands, copied unchanged from their MIT repositories (sources, versions and licences in `.agents/UPSTREAM.md`), plus five new `prodops-*` skills. They ship in every agent pack and project download, are listed in the Lab's new Skills tab, and are loaded by the AI server. They are bundled as lazy chunks, so they do not enlarge the first page load. `npm run kit` no longer writes renamed copies of the skills.

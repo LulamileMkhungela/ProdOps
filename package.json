@@ -12,7 +12,7 @@
     "preview:static": "tsx --tsconfig tsconfig.scripts.json scripts/preview-server.ts",
     "qa": "tsx scripts/qa.ts",
     "render-check": "tsx --tsconfig tsconfig.scripts.json scripts/render-check.tsx",
-    "check": "npm run render-check && npm run test && npm run test:lab && npm run export-check && npm run walkthrough && npm run example-app && npm run smoke && npm run browser-check && npm run qa && npm run build",
+    "check": "npm run render-check && npm run test && npm run test:lab && npm run test:example && npm run export-check && npm run walkthrough && npm run example-app && npm run smoke && npm run browser-check && npm run qa && npm run build",
     "smoke": "tsx --tsconfig tsconfig.scripts.json scripts/smoke.tsx",
     "browser-check": "tsx --tsconfig tsconfig.scripts.json scripts/browser-check.ts",
     "export-check": "tsx --tsconfig tsconfig.scripts.json scripts/export-check.ts",
@@ -22,7 +22,9 @@
     "kit": "tsx --tsconfig tsconfig.scripts.json scripts/emit-kit.ts",
     "test:assistant": "node --import tsx --test scripts/assistant.test.ts && tsx --tsconfig tsconfig.scripts.json scripts/assistant-smoke.tsx",
     "test:lab": "node --import tsx --test scripts/lab.test.ts && tsx scripts/lab-smoke.tsx",
-    "test:studio": "node --import tsx --test scripts/studio.test.ts && tsx scripts/studio-smoke.tsx"
+    "test:studio": "node --import tsx --test scripts/studio.test.ts && tsx scripts/studio-smoke.tsx",
+    "test:example": "node --import tsx --test scripts/example.test.ts",
+    "example:build": "tsx --tsconfig tsconfig.scripts.json scripts/build-example.ts"
   },
   "dependencies": {
     "jszip": "^3.10.1",
@@ -52,7 +54,7 @@
     "vue": "^3.5.44"
   },
   "license": "MIT",
-  "description": "ProdOps — a product-planning and UI-design framework by Lulamile Mkhungela. Five stages from an idea to a handoff: product, data shape, design system, sections, export.",
+  "description": "ProdOps \u2014 a product-planning and UI-design framework by Lulamile Mkhungela. Five stages from an idea to a handoff: product, data shape, design system, sections, export.",
   "author": "Lulamile Mkhungela",
   "keywords": [
     "design-system",

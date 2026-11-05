@@ -687,3 +687,20 @@
   .ide-groups.split{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
   .modal-backdrop{padding:10px}
 }
+
+/* touch: actions belong to the row you tapped, not to a hover that never happens */
+@media(hover:none){
+  .ide .tree-row .tree-actions{display:none}
+  .ide .tree-row.selected .tree-actions{display:flex}
+  .ide .step-edit{opacity:1}
+}
+@media(max-width:640px){
+  .ide-project-menu .ide-menu{position:fixed;left:8px;right:8px;top:52px;width:auto}
+  .ide .studio-toast{left:12px;right:12px;max-width:none;bottom:34px}
+}
+@media(max-width:560px){
+  .guide-steps li{grid-template-columns:20px minmax(0,1fr);row-gap:6px}
+  .guide-steps li>button{grid-column:2;justify-self:start}
+  .guide-progress-row{flex-direction:column;align-items:flex-start;gap:2px}
+  .download-modal{width:100%}
+}

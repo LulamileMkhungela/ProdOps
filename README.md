@@ -74,7 +74,7 @@ This is intended for a trusted single-user environment. The same-origin check is
 
 ## ProdOps Lab
 
-Open **Guided build** in the sidebar (the header pill shows the next step, e.g. “Guide 3/8”). It walks one path: brief → draft specs → review and approve → standards → design system → scope and milestones → readiness → hand off. Everything in it runs in the browser, so it also works on the static preview. See [docs/GAPS.md](docs/GAPS.md) for why each part exists and what it cannot do.
+Open the **?** guide, then **Workspace review**. It walks one path: brief → draft specs → review and approve → standards → design system → scope and milestones → readiness → hand off. Everything in it runs in the browser, so it also works on the static preview. See [docs/GAPS.md](docs/GAPS.md) for why each part exists and what it cannot do.
 
 - **Draft specs** shows the product pattern it detected (change it if it is wrong), then drafts each of the five roles, or all of them, from your brief with no AI model. Files are labelled as template drafts; the scope list is written with the requirements.
 - **Readiness** scores the project for handoff: placeholders behind approvals, contrast, generic palettes and headlines, and a requirement → design → test traceability matrix.
@@ -91,27 +91,27 @@ The Studio is laid out like VS Code or Kiro, so each kind of thing lives in one 
 
 | Area | What it holds |
 | --- | --- |
-| **Title bar** | The project name (click to rename; a new project starts empty), the project picker, **New project**, the **?** help menu, layout toggles and the one **Download** button. |
-| **Activity bar** (far left) | The five roles. Clicking a role opens its first step. Below them, **Resources** links to https://90n.ai/resources (paid library). |
-| **Steps and files** (second column) | The role's numbered steps with a tick when done, then **Files in this step**: add a file, folder or outline, import files, drag to reorder or move into a folder (numbers follow the order). |
-| **Editor** (centre) | Open files as tabs with a breadcrumb. **Split** puts any file beside another (for example a spec next to its output). A step bar at the bottom has **Back**, **Mark as done** and **Next**. |
+| **Title bar** | The project name (edit it here or in the step; a new project starts empty), the project picker, a project menu (rename, save a copy, open a copy, delete project), **New project**, the **?** guide and layout toggles. There is no download button in the bar. |
+| **Activity bar** (far left) | The five roles. Clicking a role opens its first step. Directly below them, **Resources** links to https://90n.ai/resources (paid library). |
+| **Steps and files** (second column) | The role's numbered steps with a tick when done and a pencil to rename them, then **Files in this step**: add a file, folder or outline, import files, rename in place, drag to reorder or move into a folder (numbers follow the order). |
+| **Editor** (centre) | Open files as tabs with a breadcrumb, the step you are in, and a note when earlier roles owe you something (open it or carry on without it). **Code & output** and **Split** put any two things beside each other, stacked on a phone. Attachments belong to the step. A step bar at the bottom has **Back**, **Mark as done** and **Next**. |
 | **Panel** (bottom) | Review, what earlier roles handed over, live problems and a log. Closed on short screens. |
-| **Agent** (far right) | Instant draft for the current step, optional AI, references. |
-| **Status bar** | Project, role > step, problem counts, AI and save state. |
+| **Agent** (far right) | Instant draft for the current step and optional AI. |
+| **Status bar** | Problems, project, role > step and the file count. |
 
-The **?** menu holds the role guide (steps and a video for each role), the whole-project guided build, the worked example, importing a saved project and the five-stage design flow. Below 900px wide the second column and the agent become slide-over drawers.
+The **?** button opens one role-specific guide: what the role is for, a video from start to finish, every step with its status, and a **Whole project** tab with all five roles. Its footer links to the finished example, the workspace review and the paid library. Below 900px wide the second column and the agent become slide-over drawers, the split view stacks, and the file actions show on the row you tapped.
 
 Role videos are in `public/walkthrough/` (`business.mp4`, `design.mp4`, `development.mp4`, `quality.mp4`, `delivery.mp4`).
 
 ## Worked example and video
 
-`examples/clinic-front-desk/` is one complete project: every spec file, the design system, the PRD and milestone prompts, and a finished application you can run. In the app choose **Open the worked example** (left column, under *Your projects*), then Development, then **Run current preview**. The example is opt-in, so a new project still starts empty. Its README says what was generated and what was written by hand. `docs/walkthrough/prodops-walkthrough.mp4` shows every click from an empty app to the running product.
+`examples/clinic-front-desk/` is one complete project: every spec file, the design system, the PRD and milestone prompts, and a finished application you can run. In the app open the **?** guide, choose **See a finished example**, then Development, then **Run current preview**. The example is opt-in, so a new project still starts empty. Its README says what was generated and what was written by hand. `docs/walkthrough/prodops-walkthrough.mp4` shows every click from an empty app to the running product.
 
 ## Skills
 
 `.agents/skills/` holds the installed skills and `.agents/commands/` the slash commands, listed in [.agents/UPSTREAM.md](.agents/UPSTREAM.md). The `bm-*` skills (PRD creator, design system, skill builder, favicon creator), the agentcanon skills, `frontend-design` and the Agent OS and Design OS commands are copied unchanged from the open-source (MIT) repositories at github.com/buildermethods, with their licences and commit versions recorded. Five `prodops-*` skills are original to ProdOps (one per role, plus how to build from a pack). `.claude/skills` links to the same folder, and `CLAUDE.md` links to `AGENTS.md`. Every Markdown file from the five buildermethods repositories (README, AGENTS, CLAUDE, CHANGELOG, the Design OS docs, the Agent OS profile and community files) is kept unchanged under `.agents/upstream/` as reference; their own AGENTS.md and CLAUDE.md describe how to work inside those repositories, so they are not written to the root of your project.
 
-They are used in three places: every **Agent pack** and **Download project** includes them and AGENTS.md says when to reach for each; the Lab's **Skills** tab lists them with copy-ready prompts and a download for installing them on your computer; and the optional AI server loads the role's skills into its prompts.
+They are used in three places: every **Agent pack** and the project ZIP (project menu → **Save a copy**) includes them and AGENTS.md says when to reach for each; the Lab's **Skills** tab lists them with copy-ready prompts and a download for installing them on your computer; and the optional AI server loads the role's skills into its prompts.
 
 ## Checks
 

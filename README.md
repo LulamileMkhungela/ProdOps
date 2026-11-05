@@ -85,6 +85,21 @@ Open **Guided build** in the sidebar (the header pill shows the next step, e.g. 
 - **Decisions** is a written guide to common trade-offs (client or server search, fixed or configurable fields, delete or archive, and more).
 - **Agent pack** downloads one zip with `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor rules, Copilot instructions, milestone prompts and your specs. Choose web, Expo or both.
 
+## Studio layout (IDE style)
+
+The Studio is laid out like VS Code or Kiro, so each kind of thing lives in one predictable place:
+
+| Area | What it holds |
+| --- | --- |
+| **Activity bar** (far left, icons) | The five roles: Business, Design, Development, Quality, Delivery. Bottom: Guided build, Agent, Download. |
+| **Explorer** (second column) | For the chosen role: PROCESS (its steps and their status), FILES IN THIS STEP, DELIVERABLES, ALL SPEC FOLDERS, PROJECT. Sections collapse like IDE folders. |
+| **Editor** (centre) | Open files as tabs with a breadcrumb (role > step > file). Compare UI and Run current preview sit on the tab bar. |
+| **Panel** (bottom) | REVIEW (approve, revisit, reject), SHARED CONTEXT (what earlier roles handed over), PROBLEMS (live readiness checks), OUTPUT (a log of what ProdOps just did). |
+| **Agent** (far right) | Hidden until you click the Agent icon: Instant draft, Create with AI, Claude/Figma connection, references, download choices. |
+| **Status bar** | Project, role > step, problem counts (click to open PROBLEMS), AI state, save state, file and skill counts. |
+
+Toggle buttons for the explorer, panel and agent are in the title bar. Below 900px wide the explorer and agent become slide-over drawers.
+
 ## Worked example and video
 
 `examples/clinic-front-desk/` is one complete project: every spec file, the design system, the PRD and milestone prompts, and a finished application you can run. In the app choose **Open the worked example** (left column, under *Your projects*), then Development, then **Run current preview**. The example is opt-in, so a new project still starts empty. Its README says what was generated and what was written by hand. `docs/walkthrough/prodops-walkthrough.mp4` shows every click from an empty app to the running product.

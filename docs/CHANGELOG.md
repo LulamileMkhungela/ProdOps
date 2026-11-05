@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Studio restructured like an IDE (VS Code / Kiro): roles on a far-left activity bar, a collapsible explorer for the role's process, files and deliverables, file tabs with a breadcrumb, a bottom panel (Review, Shared context, Problems, Output), the Agent as a right-hand panel opened from its icon, and a status bar. Existing behaviour is kept; the Review, Shared context and Agent controls moved. The walkthrough video was re-recorded on the new layout.
 - Worked example `examples/clinic-front-desk/`: a full project from brief to a running application (specs for all five roles, design tokens and system, standards, PRD, six milestone prompts and logs, and a finished clinic front-desk app). Opt-in: **Open the worked example** under *Your projects*; new projects still start empty. `npm run test:example` tests the application, the project and that the hand-off pack is current; `npm run example:build` refreshes the pack.
 - Video walkthrough `docs/walkthrough/prodops-walkthrough.mp4`: every click from an empty app to the running product, recorded from the static build.
 - Found while recording: the preview frame blocks form submission, so a form relying on a submit button would silently do nothing there. The example submits from its buttons and the Enter key, and a test guards it.

@@ -157,7 +157,7 @@ try {
   const picker=win.document.querySelector('[aria-label="Choose project"]') as HTMLSelectElement;assert.equal(picker.options.length,3)
   await select('[aria-label="Choose project"]',Array.from(picker.options).find(o=>o.text==='First project')!.value)
   assert.equal((win.document.querySelector('#project-name') as HTMLInputElement).value,'First project');assert.match((win.document.querySelector('textarea[aria-label="Project context"]') as HTMLTextAreaElement).value,/small teams/)
-  await click('Choose what to download');await click('Full project');await act(async()=>{await new Promise(r=>setTimeout(r,300))})
+  const before=exported;await click('Choose what to download');await click('Full project');for(let i=0;i<100&&exported===before;i++)await act(async()=>{await new Promise(r=>setTimeout(r,100))})
   assert.ok(exported);const zip=await JSZip.loadAsync(await exported.arrayBuffer());assert.equal(await zip.file('specs/business/vision/shape.md')!.async('string'),'# The PRD\nReal content')
   assert.doesNotMatch(await zip.file('.prodops/project.json')!.async('string'),/sk-ant-valid-test-key|figma-valid-token-123/);assert.ok(zip.file('.agents/skills/bm-prd-creator/SKILL.md'));assert.match(await zip.file('handoff/design-context.md')!.async('string'),/existing design system/);assert.match(await zip.file('design/design-tokens.json')!.async('string'),/#123456/);assert.ok(zip.file('solution/imported.component.ts'));assert.equal(await zip.file('solution/example.js')!.async('string'),'// Created in ProdOps')
   assert.ok(Object.keys(zip.files).some(name=>name.endsWith('button.component.scss')));assert.ok(Object.keys(zip.files).some(name=>name.endsWith('figma-ABC-1-2.md')))

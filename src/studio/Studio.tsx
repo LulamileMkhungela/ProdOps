@@ -529,7 +529,7 @@ export function Studio() {
             {creatingFolder && <div className="create-file" id="new-folder-form"><input aria-label="New folder name" placeholder="Folder name" value={newFolder} autoFocus onChange={e => setNewFolder(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addFolder(); if (e.key === 'Escape') setCreatingFolder(false) }}/><button className="button outline small" onClick={addFolder}>Add</button><button className="plain-icon" aria-label="Cancel" onClick={() => setCreatingFolder(false)}><X size={15}/></button></div>}
             <ExplorerTree entries={stepEntries} selected={selected} onOpen={openFile} onMove={moveAction}
               onAddIn={folder => startNewFile(folder)} onAddFolderIn={folder => startNewFolder(folder)} onDropFiles={files => void importFiles(files)} onSide={path => setSplit(path)} onRename={renameItem}/>
-            {stepCount === 0 && !(role === 'business' && stage.id === 'vision') && <p className="ide-empty">Nothing here yet. Add a file, add an outline, or drop a file above.</p>}
+            {stepCount === 0 && !(role === 'business' && stage.id === 'vision') && <p className="ide-empty">Nothing here yet. Add the files for this step above, or drop one here.</p>}
           </Section>
         </>}
       </aside>

@@ -73,6 +73,7 @@ const plans: Record<string, Blueprint[]> = {
   'development/architecture': [
     d('architecture.md', 'Architecture', [['Parts', 'Which pieces exist and what does each own?'], ['Data flow', 'What calls what, and where does data live?']]),
     d('api-endpoints.md', 'API endpoints', [['Endpoints', 'Method, path, purpose, who may call it. Add one row per endpoint.'], ['Errors', 'What does each error look like?']]),
+    d('environment-variables.md', 'Environment variables', [['Setting', 'Name, what it is for, and whether it is secret.'], ['Where', 'Local, test and live values. Never paste the real secret here.']]),
     d('integrations.md', 'Integrations', [['Third parties', 'Which outside services, keys and limits?']]),
   ],
   'development/specification': [
@@ -103,6 +104,8 @@ const plans: Record<string, Blueprint[]> = {
   ],
   'quality/cases': [
     d('test-cases.md', 'Test cases', [['Case', 'Steps, expected result, and which requirement it proves. Add one per case.'], ['Edge cases', 'Empty, error, permissions and limits.']]),
+    d('api-tests.md', 'API tests', [['Endpoint', 'Which call you test, with which input, and what comes back.'], ['Failure', 'Bad input, no permission and server error.']]),
+    d('ui-e2e-tests.md', 'End-to-end UI tests', [['Journey', 'One path through the screens, from start to done.'], ['Checks', 'What must be visible or true at each step.']]),
     d('acceptance-criteria.md', 'Acceptance criteria', [['Criterion', 'What must be true for this to be accepted?']]),
   ],
   'quality/regression': [
@@ -125,6 +128,8 @@ const plans: Record<string, Blueprint[]> = {
   ],
   'delivery/release': [
     d('release-plan.md', 'Release plan', [['Rollout', 'Who gets it first, and when?'], ['Comms', 'What do people need to be told?']]),
+    d('ci-checks.md', 'CI and deploy checks', [['Pipeline', 'What runs on every change, and what must pass before a deploy?'], ['Deploy', 'How does it reach live, and who can do it?']]),
+    d('environments.md', 'Environments', [['Where it runs', 'Local, test and live: hosts, data and who has access.'], ['Config', 'Which settings and secrets each environment needs.']]),
     d('rollback.md', 'Rollback', [['Undo', 'How do you undo it, and how fast?']]),
   ],
   'delivery/operations': [

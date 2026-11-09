@@ -4,9 +4,11 @@ export type { Role } from './workflows'
 export interface FileItem { path: string; content: string }
 export interface Reference { id: string; name: string; mime: 'image/png' | 'image/jpeg' | 'image/webp' | 'application/pdf' | 'text/plain'; source?: string; data: string; text: string; role: Role; step: string }
 export type StepStatus = 'not_started' | 'in_progress' | 'approved' | 'rejected' | 'revisit'
+/** Custom names for a step (key `step/<role>/<id>`) or a file (key `file/<path>`). */
+export type Labels = Record<string, string>
 export interface StepDecision { status: StepStatus; note: string }
-export interface StudioProject { version: 1; name: string; mode: 'new' | 'existing'; stepDecisions: Record<string, StepDecision>; spec: string; businessApproved: boolean; designStale: boolean; developmentStale: boolean; files: FileItem[]; references: Reference[]; answers: Record<string, string> }
-export const initialProject: StudioProject = { version: 1, name: 'Untitled project', mode: 'new', stepDecisions: {}, spec: '', businessApproved: false, designStale: false, developmentStale: false, files: [], references: [], answers: {} }
+export interface StudioProject { version: 1; name: string; mode: 'new' | 'existing'; stepDecisions: Record<string, StepDecision>; spec: string; businessApproved: boolean; designStale: boolean; developmentStale: boolean; files: FileItem[]; references: Reference[]; answers: Record<string, string>; labels: Labels }
+export const initialProject: StudioProject = { version: 1, name: '', mode: 'new', stepDecisions: {}, spec: '', businessApproved: false, designStale: false, developmentStale: false, files: [], references: [], answers: {}, labels: {} }
 const roleNames: Role[] = ['business', 'design', 'development', 'quality', 'delivery']
 export const roleOf = (path: string): Role | null => {
   const spec = /^specs\/(business|design|development|quality|delivery)\//.exec(path)
@@ -29,11 +31,13 @@ export function readProject(value: unknown): StudioProject | null {
   if (v.version !== 1 || typeof v.name !== 'string' || v.name.length > 120 || typeof v.spec !== 'string' || v.spec.length > 30000 || !Array.isArray(v.files) || v.files.length > 300 || !v.files.every(isSafeFile) || new Set(v.files.map(f => f.path)).size !== v.files.length) return null
   const references = v.references ?? []
   if (!Array.isArray(references) || references.length > 12 || !references.every(safeReference) || references.reduce((n, r) => n + r.data.length, 0) > 3400000) return null
+  const labels = v.labels ?? {}
+  if (!labels || typeof labels !== 'object' || Array.isArray(labels) || Object.keys(labels).length > 400 || Object.entries(labels).some(([k, val]) => !/^(step\/[a-z-]+\/[a-z-]+|file\/[a-zA-Z0-9_.\/-]+)$/.test(k) || typeof val !== 'string' || val.length > 80)) return null
   const answers = v.answers ?? {}
   if (!answers || typeof answers !== 'object' || Array.isArray(answers) || Object.keys(answers).length > 100 || Object.entries(answers).some(([k, val]) => !/^[a-z-]+\/[a-z-]+$/.test(k) || typeof val !== 'string' || val.length > 4000)) return null
   const decisions = v.stepDecisions ?? {}
   if (!decisions || typeof decisions !== 'object' || Array.isArray(decisions) || Object.keys(decisions).length > 100 || Object.entries(decisions).some(([key, d]) => !/^[a-z-]+\/[a-z-]+$/.test(key) || !d || typeof d !== 'object' || !['not_started','in_progress','approved','rejected','revisit'].includes(d.status) || typeof d.note !== 'string' || d.note.length > 2000)) return null
-  return { version: 1, name: v.name, mode: v.mode === 'existing' ? 'existing' : 'new', stepDecisions: decisions, spec: v.spec, businessApproved: v.businessApproved === true && v.files.some(f => roleOf(f.path) === 'business') && v.spec.trim().length >= 20, designStale: v.designStale === true, developmentStale: v.developmentStale === true, files: v.files, references, answers }
+  return { version: 1, name: v.name, mode: v.mode === 'existing' ? 'existing' : 'new', stepDecisions: decisions, spec: v.spec, businessApproved: v.businessApproved === true && v.files.some(f => roleOf(f.path) === 'business') && v.spec.trim().length >= 20, designStale: v.designStale === true, developmentStale: v.developmentStale === true, files: v.files, references, answers, labels }
 }
 export function updateFile(project: StudioProject, path: string, content: string): StudioProject {
   const role = roleOf(path)
@@ -56,8 +60,10 @@ export function contextFor(project: StudioProject, _role: Role): string {
 
 /** Any approved step affected by an edit returns to a review-needed state. */
 export function reconcileStepChanges(before: StudioProject, next: StudioProject): StudioProject {
-  // Dragging files into a new order must not count as an edit to an approved step.
+  // Reordering or renaming a file must not count as an edit to an approved step, so
+  // the comparison uses content and folder children, never the file order or name.
   const canon = (files: FileItem[]) => [...files].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0)
+  const byContent = (files: FileItem[]) => [...files].map(f => f.content).sort().join('\u0001')
   let decisions = next.stepDecisions
   for (const [key, decision] of Object.entries(before.stepDecisions)) {
     if (decision.status !== 'approved' || next.stepDecisions[key]?.status !== 'approved') continue
@@ -76,10 +82,21 @@ export function reconcileStepChanges(before: StudioProject, next: StudioProject)
     const relevantAssets = (f: FileItem) => role === 'design' && stepIndex >= previousSteps.indexOf('system') && f.path.startsWith('design/') || role === 'development' && stepIndex >= previousSteps.indexOf('implementation') && f.path.startsWith('solution/')
     const notesChanged = roleNames.some(r => roleNames.indexOf(r) <= roleIndex && before.answers[`context/${r}`] !== next.answers[`context/${r}`])
     const assetsChanged = JSON.stringify(canon(before.files.filter(relevantAssets))) !== JSON.stringify(canon(next.files.filter(relevantAssets)))
-    if (notesChanged || assetsChanged || before.spec !== next.spec || before.mode !== next.mode || (role !== 'business' && before.answers['preferences/stack'] !== next.answers['preferences/stack']) || before.answers[key] !== next.answers[key] || JSON.stringify(canon(previousFiles)) !== JSON.stringify(canon(nextFiles)) || JSON.stringify(previousRefs) !== JSON.stringify(nextRefs) || JSON.stringify(canon(upstreamFilesBefore)) !== JSON.stringify(canon(upstreamFilesAfter))) {
+    if (notesChanged || assetsChanged || before.spec !== next.spec || before.mode !== next.mode || (role !== 'business' && before.answers['preferences/stack'] !== next.answers['preferences/stack']) || before.answers[key] !== next.answers[key] || byContent(previousFiles) !== byContent(nextFiles) || JSON.stringify(previousRefs) !== JSON.stringify(nextRefs) || byContent(upstreamFilesBefore) !== byContent(upstreamFilesAfter)) {
       if (decisions === next.stepDecisions) decisions = { ...decisions }
       decisions[key] = { ...decision, status: 'revisit' }
     }
   }
   return decisions === next.stepDecisions ? next : { ...next, stepDecisions: decisions }
+}
+
+/** A step's name: the team's own label when they renamed it, otherwise the default. */
+export function stepName(project: StudioProject, role: Role, id: string, fallback: string): string {
+  const custom = project.labels[`step/${role}/${id}`]
+  return custom && custom.trim() ? custom : fallback
+}
+/** A file's name: the team's own label when they renamed it, otherwise the file name. */
+export function fileName(project: StudioProject, path: string): string {
+  const custom = project.labels[`file/${path}`]
+  return custom && custom.trim() ? custom : path.split('/').pop() ?? path
 }

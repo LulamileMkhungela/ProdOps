@@ -64,3 +64,25 @@ export const sameOrder = (a: FileItem[], b: FileItem[]) => a.length === b.length
 
 /** "01", "02" ... for a list position. */
 export const numberLabel = (index: number) => String(index + 1).padStart(2, '0')
+
+/** Turns "my notes" into a safe file name that keeps its extension when it has one. */
+export function safeName(input: string, fallbackExt = '.md'): string {
+  const trimmed = input.trim().replace(/[^a-zA-Z0-9._ -]/g, '-').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^[-.]+|[-.]+$/g, '')
+  if (!trimmed) return ''
+  return /\.[a-zA-Z0-9]{1,8}$/.test(trimmed) ? trimmed : trimmed + fallbackExt
+}
+
+/** Renames a file, or a folder and everything inside it. Returns null when the name is not allowed. */
+export function renameEntry(files: FileItem[], entry: TreeEntry, name: string): FileItem[] | null {
+  const cleaned = safeName(name, entry.kind === 'folder' ? '' : '.md')
+  if (!cleaned || cleaned === '.' || cleaned === '..') return null
+  const parent = entry.path.slice(0, entry.path.length - entry.name.length)
+  const nextPath = parent + cleaned
+  const moving = new Set(entry.files.map(f => f.path))
+  const renamedInOrder = entry.files.map(f => ({ ...f, path: nextPath + f.path.slice(entry.path.length) }))
+  const rest = files.filter(f => !moving.has(f.path))
+  if (renamedInOrder.some(f => !isSafeFile(f) || rest.some(r => r.path === f.path) || roleOf(f.path) !== roleOf(entry.path))) return null
+  const byOld = new Map(entry.files.map((f, i) => [f.path, renamedInOrder[i]] as const))
+  // Keep each renamed file exactly where it was in the project order.
+  return files.map(f => byOld.get(f.path) ?? f)
+}

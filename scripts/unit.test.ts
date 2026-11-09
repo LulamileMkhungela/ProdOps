@@ -606,7 +606,8 @@ test('the auto-seeded sample is not treated as the builder’s product', () => {
 })
 
 // ---- explorer tree: order, numbering and moving ----
-import { buildEntries, moveEntry, visibleFiles, isKeep } from '../src/studio/tree'
+import { initialProject, readProject, stepName } from '../src/studio/model'
+import { buildEntries, moveEntry, renameEntry, safeName, visibleFiles, isKeep } from '../src/studio/tree'
 {
   const f = (path: string) => ({ path, content: '' })
   const base = 'specs/design/system/'
@@ -635,5 +636,26 @@ import { buildEntries, moveEntry, visibleFiles, isKeep } from '../src/studio/tre
     const clash = [f(base + 'a.md'), f(base + 'docs/a.md')]
     const [a, docs] = buildEntries(clash, base)
     assert.equal(moveEntry(clash, a, docs, 'into'), null)
+  })
+  test('tree: renaming keeps the position, the extension and the folder contents', () => {
+    assert.equal(safeName('My notes', '.md'), 'My-notes.md')
+    assert.equal(safeName('notes.md', '.md'), 'notes.md')
+    assert.equal(safeName('  ', '.md'), '')
+    const entries = buildEntries(files, base)
+    const [a, , docs] = entries
+    const renamed = renameEntry(files, a, 'first')!
+    assert.deepEqual(buildEntries(renamed, base).map(e => e.name), ['first.md', 'b.md', 'docs', 'c.md'])
+    const folder = renameEntry(files, docs, 'reference')!
+    assert.ok(folder.some(x => x.path === base + 'reference/x.md') && folder.some(x => x.path === base + 'reference/.gitkeep'))
+    assert.equal(folder.some(x => x.path.startsWith(base + 'docs')), false)
+    assert.equal(renameEntry(files, a, 'b'), null, 'a name already in the folder is refused')
+  })
+  test('labels survive a saved project, and unsafe names are rejected', () => {
+    const project = { ...initialProject, name: 'One', labels: { 'step/business/vision': 'The problem' } }
+    assert.equal(readProject(JSON.parse(JSON.stringify(project)))?.labels['step/business/vision'], 'The problem')
+    assert.equal(stepName(project, 'business', 'vision', 'Vision & outcomes'), 'The problem')
+    assert.equal(stepName(project, 'business', 'users', 'Users & journeys'), 'Users & journeys')
+    assert.equal(readProject({ ...project, labels: { 'step/business/vision': 'x'.repeat(81) } }), null)
+    assert.equal(readProject({ ...project, labels: { 'made up': 'name' } }), null)
   })
 }
